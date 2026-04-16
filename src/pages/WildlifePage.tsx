@@ -36,6 +36,7 @@ import { useNavigate } from 'react-router-dom';
 import { MYSURU_AREAS as GLOBAL_MYSURU_AREAS } from '../constants';
 import { useAppContext } from '../context/AppContext';
 import { WildlifeCase } from '../types';
+import { uploadFile, base64ToFile } from '../lib/storage';
 
 const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: () => void }) => {
   const handlePrint = () => {
@@ -305,7 +306,7 @@ const WildlifePage: React.FC = () => {
     return { total, monthly, yearly };
   }, [wildlifeCases]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.phoneNumber.length !== 10) {
       alert("Reporter phone number must be exactly 10 digits.");
@@ -317,6 +318,22 @@ const WildlifePage: React.FC = () => {
     }
 
     const combinedLoc = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
+
+    let finalImageUrl = selectedImage || undefined;
+
+    // Supabase Upload Logic
+    if (selectedImage && selectedImage.startsWith('data:')) {
+      try {
+        const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
+        const uploadedUrl = await uploadFile(file, 'animal-records', `wildlife/${file.name}`);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+        }
+      } catch (error) {
+        console.error('Supabase upload failed, falling back to local storage:', error);
+      }
+    }
+
     const newTransfer: WildlifeCase = {
       id: `TFR-${Date.now()}`,
       caseNumber: formData.caseNumber,
@@ -335,12 +352,12 @@ const WildlifePage: React.FC = () => {
       signature: 'Current User',
       reportedDate: formData.reportedDate,
       resolvedDate: formData.resolvedDate,
-      imageUrl: selectedImage || undefined,
+      imageUrl: finalImageUrl,
       createdAt: new Date().toISOString()
     };
 
     addWildlifeCase(newTransfer);
-    alert("Case submitted successfully to the local registry.");
+    alert("Case submitted successfully to the database.");
     setView('history');
   };
 

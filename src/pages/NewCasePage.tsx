@@ -23,6 +23,8 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { MYSURU_AREAS as GLOBAL_MYSURU_AREAS } from '../constants';
 import { Case, CaseStatus } from '../types';
+import { uploadFile, base64ToFile } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 
 const NewCasePage: React.FC = () => {
   const navigate = useNavigate();
@@ -152,7 +154,7 @@ const NewCasePage: React.FC = () => {
     }
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     if (!formData.caseNumber.trim()) {
       alert("Please enter a Case Number.");
       return;
@@ -171,6 +173,21 @@ const NewCasePage: React.FC = () => {
     const finalAnimalType = formData.animalType === 'Other' ? (formData.customAnimalType || 'Other') : formData.animalType;
     const combinedLocation = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
 
+    let finalImageUrl = selectedImage || undefined;
+
+    // Supabase Upload Logic
+    if (selectedImage && selectedImage.startsWith('data:')) {
+      try {
+        const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
+        const uploadedUrl = await uploadFile(file, 'animal-records', `cases/${file.name}`);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+        }
+      } catch (error) {
+        console.error('Supabase upload failed, falling back to local storage:', error);
+      }
+    }
+
       const newCase: Case = {
         id: Math.random().toString(36).substr(2, 9),
         title: `${finalAnimalType} Rescue - ${formData.caseNumber}`,
@@ -178,7 +195,7 @@ const NewCasePage: React.FC = () => {
         description: `Age: ${formData.age}\nGender: ${formData.gender}\n\n${formData.description || 'No detailed assessment provided.'}\n\nReporter: ${formData.compName || 'Anonymous'} (${formData.compPhone || 'N/A'})\nReporter Address: ${formData.compAddress || 'N/A'}`,
         status: CaseStatus.UNDER_TREATMENT,
         reportedBy: undefined, // user_id would go here
-        imageUrl: selectedImage || undefined,
+        imageUrl: finalImageUrl,
         createdAt: new Date().toISOString()
       };
 

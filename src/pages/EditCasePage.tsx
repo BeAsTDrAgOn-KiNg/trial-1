@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Case, CaseStatus } from '../types';
+import { uploadFile, base64ToFile } from '../lib/storage';
 
 const EditCasePage: React.FC = () => {
   const { caseId } = useParams();
@@ -72,7 +73,7 @@ const EditCasePage: React.FC = () => {
     }
   }, [caseId, navigate, cases, isLoading]);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!formData.caseNumber.trim()) {
       alert("Please enter a Case Number.");
       return;
@@ -87,13 +88,28 @@ const EditCasePage: React.FC = () => {
     const targetCase = cases.find(c => c.id === caseId);
 
     if (targetCase) {
+      let finalImageUrl = selectedImage || undefined;
+
+      // Supabase Upload Logic (only if it's a new base64 image)
+      if (selectedImage && selectedImage.startsWith('data:')) {
+        try {
+          const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
+          const uploadedUrl = await uploadFile(file, 'animal-records', `cases/${file.name}`);
+          if (uploadedUrl) {
+            finalImageUrl = uploadedUrl;
+          }
+        } catch (error) {
+          console.error('Supabase upload failed, falling back to local storage:', error);
+        }
+      }
+
       const updatedCase: Case = {
         ...targetCase,
         title: `${finalAnimalType} Rescue - ${formData.caseNumber}`,
         location: formData.location,
         description: formData.description,
         status: formData.status,
-        imageUrl: selectedImage || undefined,
+        imageUrl: finalImageUrl,
       };
 
       updateCase(updatedCase);

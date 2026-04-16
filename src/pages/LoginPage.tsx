@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Role } from '../types';
-import { ShieldCheck, UserCircle, HeartHandshake, Eye, EyeOff, ShieldAlert, Mail, User as UserIcon, AlertCircle, ChevronDown, CheckCircle } from 'lucide-react';
+import { ShieldCheck, UserCircle, HeartHandshake, Eye, EyeOff, ShieldAlert, Mail, User as UserIcon, AlertCircle, ChevronDown, CheckCircle, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -11,71 +12,89 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
-  const [identifier, setIdentifier] = useState(''); // Email or Employee ID
+  const [identifier, setIdentifier] = useState(''); // Email
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>('Doctor');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedId, setGeneratedId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const roles: Role[] = ['Admin', 'Doctor', 'Data Entry'];
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
     if (phone.length !== 10) {
       setError("Phone number must be exactly 10 digits.");
+      setIsLoading(false);
       return;
     }
-    const username = name.substring(0, 4).toLowerCase() + phone.slice(-4);
-    
-    // Save to local registry for demo persistence
-    const registry = JSON.parse(localStorage.getItem('pfa_user_registry') || '{}');
-    registry[username] = { name, role, email: identifier };
-    localStorage.setItem('pfa_user_registry', JSON.stringify(registry));
 
-    setGeneratedId(username);
-    setError(null);
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: identifier,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: role,
+            phone: phone
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        // Create user profile in public.user_profiles
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert([
+            {
+              id: data.user.id,
+              name: name,
+              email: identifier,
+              role: role,
+              phone: phone
+            }
+          ]);
+
+        if (profileError) console.error('Error creating profile:', profileError);
+        
+        setGeneratedId(identifier);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during registration.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError(null);
 
-    // Check registry first
-    const registry = JSON.parse(localStorage.getItem('pfa_user_registry') || '{}');
-    const registeredUser = registry[identifier];
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
+      });
 
-    let detectedRole: Role = 'Data Entry';
-    let displayName = 'User';
+      if (signInError) throw signInError;
 
-    if (registeredUser) {
-      detectedRole = registeredUser.role;
-      displayName = registeredUser.name;
-    } else {
-      // Fallback to string inference for default demo accounts
-      const idLower = identifier.toLowerCase();
-      if (idLower.includes('admin')) {
-        detectedRole = 'Admin';
-        displayName = 'Admin User';
-      } else if (idLower.includes('doctor') || idLower.includes('employee')) {
-        detectedRole = 'Doctor';
-        displayName = 'Doctor User';
-      } else if (idLower.includes('data entry') || idLower.includes('entry')) {
-        detectedRole = 'Data Entry';
-        displayName = 'Data Entry User';
+      if (data.user) {
+        // Profile fetching is handled in App.tsx via onAuthStateChanged
       }
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password.");
+    } finally {
+      setIsLoading(false);
     }
-
-    // Mock Login Logic
-    const mockUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: displayName,
-      email: identifier.includes('@') ? identifier : `${identifier}@pfa.org`,
-      phone: isRegistering ? phone : undefined,
-      role: detectedRole,
-    };
-    onLogin(mockUser);
   };
 
   const leftSideImageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=2043";
@@ -236,9 +255,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
                 <button
                   type="submit"
-                  className="w-full bg-[#43937c] hover:bg-[#387c69] text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-900/10 transition-all duration-300 active:scale-[0.98] mt-6 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
+                  disabled={isLoading}
+                  className="w-full bg-[#43937c] hover:bg-[#387c69] disabled:opacity-50 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-900/10 transition-all duration-300 active:scale-[0.98] mt-6 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                 >
-                  {isRegistering ? 'Create Account' : 'Login Now'}
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    isRegistering ? 'Create Account' : 'Login Now'
+                  )}
                 </button>
               </form>
             )}

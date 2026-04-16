@@ -28,7 +28,7 @@ import { useAppContext } from '../context/AppContext';
 type TimeFilter = 'All' | 'Weekly' | 'Monthly' | 'Yearly';
 
 const DonationsPage: React.FC = () => {
-  const { donations, addDonation, isLoading } = useAppContext();
+  const { donations, addDonation, deleteDonation, isLoading } = useAppContext();
   const [view, setView] = useState<'new-entry' | 'ledger'>('new-entry');
   const [searchTerm, setSearchTerm] = useState('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All');
@@ -110,8 +110,7 @@ const DonationsPage: React.FC = () => {
 
   const handleRemoveDonation = (id: string) => {
     if (window.confirm("Are you sure you want to remove this donation record?")) {
-      // In a real app, we'd have a deleteDonation method in context
-      alert("Donation deletion is not implemented in this demo context.");
+      deleteDonation(id);
     }
   };
 

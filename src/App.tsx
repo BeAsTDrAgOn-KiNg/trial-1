@@ -51,6 +51,8 @@ import HistoryPage from './pages/HistoryPage';
 
 import { User } from './types';
 import { AppProvider } from './context/AppContext';
+import { supabase } from './lib/supabase';
+import { useEffect } from 'react';
 
 interface SidebarLinkProps {
   to: string;
@@ -82,6 +84,53 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    // Check active sessions and subscribe to auth changes
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Fetch user profile from public.user_profiles or use metadata
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setUser(profile);
+        } else {
+          // Fallback to metadata if profile doesn't exist yet
+          setUser({
+            id: session.user.id,
+            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+            role: session.user.user_metadata.role || 'Data Entry',
+            phone: ''
+          });
+        }
+      }
+      setIsAuthLoading(false);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        checkUser();
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // Adjusted navigation based on specific user role requirements
   const allNavigation = [
@@ -102,6 +151,14 @@ const App: React.FC = () => {
   ];
 
   const navigation = allNavigation.filter(item => item.roles.includes(user?.role || ''));
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>
+      </div>
+    );
+  }
 
   return (
     <AppProvider>
@@ -135,7 +192,7 @@ const App: React.FC = () => {
                 ))}
               </nav>
               <div className="p-4 border-t border-gray-100">
-                <button onClick={() => setUser(null)} className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors group">
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors group">
                   <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
                   {!collapsed && <span className="font-medium">Sign Out</span>}
                 </button>
