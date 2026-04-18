@@ -30,7 +30,6 @@ const SearchResultsPage: React.FC = () => {
     const filteredCases = cases.filter(c => 
       c.id.toLowerCase().includes(term) ||
       c.title.toLowerCase().includes(term) ||
-      c.species.toLowerCase().includes(term) ||
       (c.location || '').toLowerCase().includes(term)
     );
 

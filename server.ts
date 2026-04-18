@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import fs from 'fs';
+import morgan from 'morgan';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  app.use(morgan('dev'));
   app.use(express.json());
   app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
