@@ -1,6 +1,6 @@
 {
   "name": "Remix: People For Animals (PFA) Portal",
-  "description": "A comprehensive animal rescue and welfare management system for PFA, featuring case tracking, medical monitoring, inventory management, and community modules.",
+  "description": "A comprehensive full-stack animal rescue and welfare management system for PFA, powered by Express, Prisma, and PostgreSQL.",
   "requestFramePermissions": [
     "camera",
     "microphone"

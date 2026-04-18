@@ -99,6 +99,169 @@ async function startServer() {
     }
   });
 
+  // --- Animals ---
+  app.post('/api/animals', async (req, res) => {
+    try {
+      const animal = await prisma.animal.create({ data: req.body });
+      res.status(201).json(animal);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create animal' });
+    }
+  });
+
+  app.patch('/api/animals/:id', async (req, res) => {
+    try {
+      const animal = await prisma.animal.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(animal);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update animal' });
+    }
+  });
+
+  app.delete('/api/animals/:id', async (req, res) => {
+    try {
+      await prisma.animal.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete animal' });
+    }
+  });
+
+  // --- Cases ---
+  app.post('/api/cases', async (req, res) => {
+    try {
+      const newCase = await prisma.case.create({ data: req.body });
+      res.status(201).json(newCase);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create case' });
+    }
+  });
+
+  app.patch('/api/cases/:id', async (req, res) => {
+    try {
+      const updatedCase = await prisma.case.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(updatedCase);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update case' });
+    }
+  });
+
+  app.delete('/api/cases/:id', async (req, res) => {
+    try {
+      await prisma.case.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete case' });
+    }
+  });
+
+  // --- Wildlife ---
+  app.post('/api/wildlife', async (req, res) => {
+    try {
+      const newCase = await prisma.wildlifeCase.create({ data: req.body });
+      res.status(201).json(newCase);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create wildlife case' });
+    }
+  });
+
+  app.delete('/api/wildlife/:id', async (req, res) => {
+    try {
+      await prisma.wildlifeCase.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete wildlife case' });
+    }
+  });
+
+  // --- Staff ---
+  app.post('/api/staff', async (req, res) => {
+    try {
+      const staff = await prisma.staffMember.create({ data: req.body });
+      res.status(201).json(staff);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create staff member' });
+    }
+  });
+
+  app.patch('/api/staff/:id', async (req, res) => {
+    try {
+      const staff = await prisma.staffMember.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(staff);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update staff member' });
+    }
+  });
+
+  app.delete('/api/staff/:id', async (req, res) => {
+    try {
+      await prisma.staffMember.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete staff member' });
+    }
+  });
+
+  // --- Inventory: Medicines ---
+  app.post('/api/inventory/medicines', async (req, res) => {
+    try {
+      const med = await prisma.medicine.create({ data: req.body });
+      res.status(201).json(med);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create medicine' });
+    }
+  });
+
+  app.patch('/api/inventory/medicines/:id', async (req, res) => {
+    try {
+      const med = await prisma.medicine.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(med);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update medicine' });
+    }
+  });
+
+  app.delete('/api/inventory/medicines/:id', async (req, res) => {
+    try {
+      await prisma.medicine.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete medicine' });
+    }
+  });
+
+  // --- Donations ---
+  app.post('/api/donations', async (req, res) => {
+    try {
+      const donation = await prisma.donation.create({ data: req.body });
+      res.status(201).json(donation);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create donation' });
+    }
+  });
+
+  // --- Adoptions ---
+  app.post('/api/adoptions/applications', async (req, res) => {
+    try {
+      const appRecord = await prisma.adoptionApplication.create({ data: req.body });
+      res.status(201).json(appRecord);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create adoption application' });
+    }
+  });
+
   // Example API route for cases
   app.get('/api/cases', async (req, res) => {
     try {
