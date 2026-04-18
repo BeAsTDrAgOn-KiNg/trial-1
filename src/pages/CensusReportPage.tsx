@@ -36,8 +36,8 @@ const CensusReportPage: React.FC = () => {
     if (!searchTerm) return base;
     const term = searchTerm.toLowerCase();
     return base.filter(c => 
-      c.animalType.toLowerCase().includes(term) || 
-      c.caseNumber.toLowerCase().includes(term) ||
+      c.title.toLowerCase().includes(term) || 
+      c.id.toLowerCase().includes(term) ||
       c.location.toLowerCase().includes(term)
     );
   }, [activeTab, censusData, searchTerm]);
@@ -166,23 +166,23 @@ const CensusReportPage: React.FC = () => {
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm ${activeTab === 'Permanent' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                        {c.caseNumber.slice(-3)}
+                        {c.id.slice(0, 3).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-800">{c.caseNumber}</p>
+                        <p className="text-sm font-black text-slate-800">{c.title}</p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Registry ID: {c.id}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-10 py-6">
                     <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${activeTab === 'Permanent' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
-                      {c.animalType}
+                      {c.title.split(' ')[0]}
                     </span>
                   </td>
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-2 text-slate-600 text-sm font-bold">
                       <Calendar size={14} className="text-slate-400" />
-                      {activeTab === 'Released' ? (c.releasedDate || c.dateTime.split(' ')[0]) : c.dateTime.split(' ')[0]}
+                      {c.createdAt?.split('T')[0] || 'N/A'}
                     </div>
                   </td>
                   <td className="px-10 py-6">

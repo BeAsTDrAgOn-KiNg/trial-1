@@ -183,10 +183,10 @@ const App: React.FC = () => {
                     </button>
                     <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                       <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.full_name}</p>
+                        <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.fullName}</p>
                         <p className="text-[10px] text-[#005F54] font-black uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">{user.role}</p>
                       </div>
-                      <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm">{(user.full_name || 'U').charAt(0)}</div>
+                      <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm">{(user.fullName || 'U').charAt(0)}</div>
                     </div>
                   </div>
                 </header>

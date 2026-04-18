@@ -40,7 +40,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          full_name: name,
+          fullName: name,
           email: identifier,
           phone: phone,
           role: role,
@@ -84,7 +84,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         notify('Welcome back!', 'success');
         const userToLogin: User = {
           id: data.id,
-          full_name: data.fullName,
+          fullName: data.fullName,
           email: data.email,
           role: data.role,
           phone: data.phone

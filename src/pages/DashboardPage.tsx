@@ -54,7 +54,7 @@ const DashboardPage: React.FC<DashboardProps> = ({ user }) => {
   const { medicines, donations, cases, isLoading } = useAppContext();
   const isAdmin = user.role === 'Admin';
 
-  const lowStockCount = useMemo(() => medicines.filter(m => m.quantity <= m.min_stock_level).length, [medicines]);
+  const lowStockCount = useMemo(() => medicines.filter(m => m.quantity <= m.minStockLevel).length, [medicines]);
   const totalDonationAmount = useMemo(() => donations.reduce((acc, curr) => acc + curr.amount, 0), [donations]);
 
   const recentActivities = useMemo(() => {

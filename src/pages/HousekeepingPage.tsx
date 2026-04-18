@@ -42,23 +42,23 @@ const HousekeepingPage: React.FC = () => {
   const [currentSupply, setCurrentSupply] = useState<Partial<HousekeepingSupply>>({
     name: '',
     quantity: 0,
-    min_stock_level: 0,
+    minStockLevel: 0,
     unit: 'Units'
   });
 
   const filteredSupplies = useMemo(() => {
     return housekeepingSupplies.filter(s => {
       const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilterMode = filterMode === 'All' || (filterMode === 'LowStock' && s.quantity <= s.min_stock_level);
+      const matchesFilterMode = filterMode === 'All' || (filterMode === 'LowStock' && s.quantity <= s.minStockLevel);
       return matchesSearch && matchesFilterMode;
     });
   }, [housekeepingSupplies, searchTerm, filterMode]);
 
-  const lowStockCount = useMemo(() => housekeepingSupplies.filter(s => s.quantity <= s.min_stock_level && s.min_stock_level > 0).length, [housekeepingSupplies]);
+  const lowStockCount = useMemo(() => housekeepingSupplies.filter(s => s.quantity <= s.minStockLevel && s.minStockLevel > 0).length, [housekeepingSupplies]);
 
   const handleOpenAdd = () => {
     setModalMode('add');
-    setCurrentSupply({ name: '', quantity: 0, min_stock_level: 0, unit: 'Units' });
+    setCurrentSupply({ name: '', quantity: 0, minStockLevel: 0, unit: 'Units' });
     setIsModalOpen(true);
   };
 
@@ -98,7 +98,7 @@ const HousekeepingPage: React.FC = () => {
         id: `hk-${Date.now()}`,
         name: currentSupply.name!,
         quantity: Number(currentSupply.quantity),
-        min_stock_level: Number(currentSupply.min_stock_level),
+        minStockLevel: Number(currentSupply.minStockLevel),
         unit: currentSupply.unit!
       };
       addHousekeepingSupply(newItem);
@@ -109,7 +109,7 @@ const HousekeepingPage: React.FC = () => {
   };
 
   const getStockHealth = (s: HousekeepingSupply) => {
-    const isLow = s.min_stock_level > 0 && s.quantity <= s.min_stock_level;
+    const isLow = s.minStockLevel > 0 && s.quantity <= s.minStockLevel;
     
     if (isLow) return { label: 'Low Stock', color: 'text-amber-600', bg: 'bg-amber-500' };
     return { label: 'Stable', color: 'text-[#005F54]', bg: 'bg-[#005F54]' };
@@ -204,7 +204,7 @@ const HousekeepingPage: React.FC = () => {
                <tbody className="divide-y divide-slate-50">
                   {filteredSupplies.map(s => {
                     const health = getStockHealth(s);
-                    const healthPercentage = s.min_stock_level > 0 ? Math.min((s.quantity / (s.min_stock_level * 2)) * 100, 100) : 100;
+                    const healthPercentage = s.minStockLevel > 0 ? Math.min((s.quantity / (s.minStockLevel * 2)) * 100, 100) : 100;
                     
                     return (
                       <tr key={s.id} className="group hover:bg-slate-50/50 transition-colors">
@@ -290,9 +290,9 @@ const HousekeepingPage: React.FC = () => {
                                 </button>
                               )}
                            </div>
-                           {s.min_stock_level > 0 && (
+                           {s.minStockLevel > 0 && (
                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2 ml-1">
-                                Threshold: {s.min_stock_level} {s.unit}
+                                Threshold: {s.minStockLevel} {s.unit}
                              </p>
                            )}
                         </td>
@@ -396,8 +396,8 @@ const HousekeepingPage: React.FC = () => {
                     type="number"
                     required 
                     className="w-full px-5 py-4 bg-emerald-50/30 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:border-[#005F54] focus:outline-none transition-all" 
-                    value={currentSupply.min_stock_level} 
-                    onChange={e => setCurrentSupply({...currentSupply, min_stock_level: Number(e.target.value)})} 
+                    value={currentSupply.minStockLevel} 
+                    onChange={e => setCurrentSupply({...currentSupply, minStockLevel: Number(e.target.value)})} 
                     placeholder="Alert at level..."
                   />
                 </div>

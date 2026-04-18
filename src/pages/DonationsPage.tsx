@@ -35,21 +35,21 @@ const DonationsPage: React.FC = () => {
 
   // New Donation Form State
   const [newEntry, setNewEntry] = useState({
-    donor_name: '',
+    donorName: '',
     amount: '',
     message: '',
-    payment_id: '',
-    created_at: new Date().toISOString().split('T')[0]
+    paymentId: '',
+    createdAt: new Date().toISOString().split('T')[0]
   });
 
   const filteredDonations = useMemo(() => {
     return donations.filter(d => {
       const term = searchTerm.toLowerCase();
-      const matchesSearch = d.donor_name.toLowerCase().includes(term) ||
+      const matchesSearch = d.donorName.toLowerCase().includes(term) ||
                             d.id.toLowerCase().includes(term);
       
       let matchesTime = true;
-      const dDate = new Date(d.created_at || '');
+      const dDate = new Date(d.createdAt || '');
       const now = new Date();
       
       if (timeFilter === 'Weekly') {
@@ -63,7 +63,7 @@ const DonationsPage: React.FC = () => {
       }
 
       return matchesSearch && matchesTime;
-    }).sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+    }).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
   }, [donations, searchTerm, timeFilter]);
 
   const donorAggregates = useMemo(() => {
@@ -73,12 +73,12 @@ const DonationsPage: React.FC = () => {
     const total = exactMatches.reduce((acc, curr) => acc + curr.amount, 0);
     const count = exactMatches.length;
     const sample = exactMatches[0];
-    const isSingleDonor = exactMatches.every(d => d.donor_name === sample.donor_name);
+    const isSingleDonor = exactMatches.every(d => d.donorName === sample.donorName);
     if (isSingleDonor) {
       return {
         total,
         count,
-        name: sample.donor_name
+        name: sample.donorName
       };
     }
     return null;
@@ -96,7 +96,7 @@ const DonationsPage: React.FC = () => {
     const currentYear = now.getFullYear();
     let weekly = 0, monthly = 0, yearly = 0;
     donations.forEach(d => {
-      const dDate = new Date(d.created_at || '');
+      const dDate = new Date(d.createdAt || '');
       if (dDate >= startOfWeek) weekly += d.amount;
       if (dDate.getMonth() === currentMonth && dDate.getFullYear() === currentYear) monthly += d.amount;
       if (dDate.getFullYear() === currentYear) yearly += d.amount;
@@ -119,15 +119,15 @@ const DonationsPage: React.FC = () => {
     
     const entry: Donation = {
       id: `D${Math.floor(Math.random() * 1000) + 200}`,
-      donor_name: newEntry.donor_name,
+      donorName: newEntry.donorName,
       amount: parseFloat(newEntry.amount) || 0,
       message: newEntry.message,
-      payment_id: newEntry.payment_id,
-      created_at: new Date(newEntry.created_at).toISOString()
+      paymentId: newEntry.paymentId,
+      createdAt: new Date(newEntry.createdAt).toISOString()
     };
     addDonation(entry);
     alert("Donation registered successfully.");
-    setNewEntry({ donor_name: '', amount: '', message: '', payment_id: '', created_at: new Date().toISOString().split('T')[0] });
+    setNewEntry({ donorName: '', amount: '', message: '', paymentId: '', createdAt: new Date().toISOString().split('T')[0] });
   };
 
   if (isLoading) {
@@ -291,8 +291,8 @@ const DonationsPage: React.FC = () => {
                   <input 
                     required 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none transition-all shadow-sm" 
-                    value={newEntry.donor_name} 
-                    onChange={e => setNewEntry({...newEntry, donor_name: e.target.value})} 
+                    value={newEntry.donorName} 
+                    onChange={e => setNewEntry({...newEntry, donorName: e.target.value})} 
                     placeholder="Enter Donor Name"
                   />
                 </div>
@@ -320,8 +320,8 @@ const DonationsPage: React.FC = () => {
                     type="date"
                     required 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none" 
-                    value={newEntry.created_at} 
-                    onChange={e => setNewEntry({...newEntry, created_at: e.target.value})} 
+                    value={newEntry.createdAt} 
+                    onChange={e => setNewEntry({...newEntry, createdAt: e.target.value})} 
                   />
                 </div>
                 <div className="space-y-2">
@@ -330,8 +330,8 @@ const DonationsPage: React.FC = () => {
                   </label>
                   <input 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none shadow-sm" 
-                    value={newEntry.payment_id} 
-                    onChange={e => setNewEntry({...newEntry, payment_id: e.target.value})} 
+                    value={newEntry.paymentId} 
+                    onChange={e => setNewEntry({...newEntry, paymentId: e.target.value})} 
                     placeholder="e.g. TXN123456"
                   />
                 </div>
@@ -437,16 +437,16 @@ const DonationsPage: React.FC = () => {
                     <tr key={row.id} className="hover:bg-emerald-50/5 transition-colors print:hover:bg-transparent">
                       <td className="px-8 py-6 text-xs font-mono text-slate-400">#{row.id}</td>
                       <td className="px-8 py-6">
-                        <span className="text-sm font-black text-slate-800">{row.donor_name}</span>
+                        <span className="text-sm font-black text-slate-800">{row.donorName}</span>
                       </td>
                       <td className="px-8 py-6">
-                        <span className="text-xs font-bold text-slate-600">{row.payment_id || 'N/A'}</span>
+                        <span className="text-xs font-bold text-slate-600">{row.paymentId || 'N/A'}</span>
                       </td>
                       <td className="px-8 py-6">
                         <span className="text-xs font-medium text-slate-500 line-clamp-1 max-w-[150px]">{row.message || '-'}</span>
                       </td>
                       <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">₹ {row.amount.toLocaleString('en-IN')}</td>
-                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{new Date(row.created_at || '').toLocaleDateString('en-GB')}</td>
+                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{new Date(row.createdAt || '').toLocaleDateString('en-GB')}</td>
                       <td className="px-8 py-6 text-right no-print">
                         <div className="flex justify-end gap-2">
                           <button className="p-2.5 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-xl transition-all">

@@ -222,11 +222,11 @@ async function startServer() {
   // --- Auth ---
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { full_name, email, phone, role, password } = req.body;
+      const { fullName, email, phone, role, password } = req.body;
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
         data: { 
-          fullName: full_name, 
+          fullName, 
           email, 
           phone, 
           role,

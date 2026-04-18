@@ -53,7 +53,7 @@ const EditCasePage: React.FC = () => {
       
       setFormData({
         caseNumber: caseNumber,
-        dateTime: foundCase.created_at || '',
+        dateTime: foundCase.createdAt || '',
         location: foundCase.location,
         compName: '', // These are now buried in description
         compPhone: '',
@@ -65,7 +65,7 @@ const EditCasePage: React.FC = () => {
         description: foundCase.description,
         status: foundCase.status as CaseStatus
       });
-      setSelectedImage(foundCase.image_url || null);
+      setSelectedImage(foundCase.imageUrl || null);
       setLoading(false);
     } else {
       alert("Case not found.");
@@ -109,7 +109,7 @@ const EditCasePage: React.FC = () => {
         location: formData.location,
         description: formData.description,
         status: formData.status,
-        image_url: finalImageUrl,
+        imageUrl: finalImageUrl,
       };
 
       updateCase(updatedCase);

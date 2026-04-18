@@ -197,9 +197,9 @@ const NewCasePage: React.FC = () => {
         location: combinedLocation,
         description: `Age: ${formData.age}\nGender: ${formData.gender}\n\n${formData.description || 'No detailed assessment provided.'}\n\nReporter: ${formData.compName || 'Anonymous'} (${formData.compPhone || 'N/A'})\nReporter Address: ${formData.compAddress || 'N/A'}`,
         status: CaseStatus.UNDER_TREATMENT,
-        reported_by: user?.id,
-        image_url: finalImageUrl,
-        created_at: new Date().toISOString()
+        reportedById: user?.id,
+        imageUrl: finalImageUrl,
+        createdAt: new Date().toISOString()
       };
 
 

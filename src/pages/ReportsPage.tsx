@@ -197,19 +197,19 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
                   <td className="px-10 py-6">
                      <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs">
-                          {(row.donor_name || 'D').charAt(0)}
+                          {(row.donorName || 'D').charAt(0)}
                         </div>
                         <div>
-                           <p className="text-sm font-black text-slate-800">{row.donor_name || 'Anonymous'}</p>
+                           <p className="text-sm font-black text-slate-800">{row.donorName || 'Anonymous'}</p>
                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {row.id}</p>
                         </div>
                      </div>
                   </td>
                   <td className="px-10 py-6">
-                     <span className="text-[9px] font-black px-2.5 py-1 bg-white border border-slate-200 text-slate-500 rounded-md uppercase tracking-widest">{row.payment_id || 'Direct'}</span>
+                     <span className="text-[9px] font-black px-2.5 py-1 bg-white border border-slate-200 text-slate-500 rounded-md uppercase tracking-widest">{row.paymentId || 'Direct'}</span>
                   </td>
                   <td className="px-10 py-6">
-                     <span className="text-xs font-bold text-slate-500">{new Date(row.created_at || Date.now()).toLocaleDateString('en-GB')}</span>
+                     <span className="text-xs font-bold text-slate-500">{new Date(row.createdAt || Date.now()).toLocaleDateString('en-GB')}</span>
                   </td>
                   <td className="px-10 py-6 text-right">
                      <span className="text-sm font-black text-slate-900 tracking-tighter">₹ {row.amount.toLocaleString('en-IN')}</span>

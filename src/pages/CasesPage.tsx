@@ -93,7 +93,7 @@ const CaseSheetPreview = ({ caseItem, clinicalEntries, onClose }: { caseItem: Ca
               <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Reporter ID</p>
-                  <p className="text-sm font-black text-slate-800">{caseItem.reported_by || 'Unknown'}</p>
+                  <p className="text-sm font-black text-slate-800">{caseItem.reportedById || 'Unknown'}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Contact Info</p>
@@ -134,13 +134,13 @@ const CaseSheetPreview = ({ caseItem, clinicalEntries, onClose }: { caseItem: Ca
             </section>
           </div>
 
-          {caseItem.image_url && (
+          {caseItem.imageUrl && (
             <div className="pt-6 border-t border-slate-100">
                <h3 className="text-xs font-black text-[#005F54] uppercase tracking-[0.25em] flex items-center gap-2 mb-4">
                 <Camera size={14} /> Identification Photo
               </h3>
               <div className="w-full max-w-md h-64 rounded-[2rem] overflow-hidden border-2 border-slate-100 shadow-inner">
-                <img src={caseItem.image_url} alt="Animal" className="w-full h-full object-cover" />
+                <img src={caseItem.imageUrl} alt="Animal" className="w-full h-full object-cover" />
               </div>
             </div>
           )}
@@ -160,7 +160,7 @@ const CaseSheetPreview = ({ caseItem, clinicalEntries, onClose }: { caseItem: Ca
                       <p className="text-xs font-black text-slate-800">{log.date}</p>
                     </div>
                     <div className="flex-1">
-                      <p className="text-[9px] font-black text-[#005F54] uppercase tracking-widest mb-2">Attending: {log.doctor_name}</p>
+                      <p className="text-[9px] font-black text-[#005F54] uppercase tracking-widest mb-2">Attending: {log.doctorName}</p>
                       <div className="space-y-2">
                         {log.symptoms && (
                           <p className="text-xs text-slate-600 font-medium"><span className="font-black uppercase text-[9px] text-slate-400 mr-2">Symptoms:</span> {log.symptoms}</p>
@@ -185,7 +185,7 @@ const CaseSheetPreview = ({ caseItem, clinicalEntries, onClose }: { caseItem: Ca
                <div className="flex gap-8">
                   <div>
                     <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Registry Date</p>
-                    <p className="text-sm font-black text-slate-800">{caseItem.created_at?.split('T')[0] || 'N/A'}</p>
+                    <p className="text-sm font-black text-slate-800">{caseItem.createdAt?.split('T')[0] || 'N/A'}</p>
                   </div>
                </div>
                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
@@ -338,7 +338,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
   
   const currentCaseLogs = useMemo(() => {
     if (!selectedCase) return [];
-    return clinicalEntries.filter(log => log.case_id === selectedCase.id);
+    return clinicalEntries.filter(log => log.caseId === selectedCase.id);
   }, [selectedCase, clinicalEntries]);
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -365,7 +365,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
   }, [medicines]);
 
   const years = useMemo(() => {
-    const ys = new Set(cases.map(c => c.created_at?.split('-')[0] || ''));
+    const ys = new Set(cases.map(c => c.createdAt?.split('-')[0] || ''));
     return ['All', ...Array.from(ys).filter(Boolean).sort().reverse()];
   }, [cases]);
 
@@ -420,13 +420,13 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
         
         const matchesStatus = filterStatus === 'All' || c.status === filterStatus;
         
-        const dateParts = (c.created_at || '').split('-');
+        const dateParts = (c.createdAt || '').split('-');
         const matchesYear = filterYear === 'All' || dateParts[0] === filterYear;
         const matchesMonth = filterMonth === 'All' || dateParts[1] === filterMonth;
 
         let matchesTimeRange = true;
-        const caseDate = new Date(c.created_at || '');
-        const caseDateStr = (c.created_at || '').split('T')[0];
+        const caseDate = new Date(c.createdAt || '');
+        const caseDateStr = (c.createdAt || '').split('T')[0];
 
         if (filterTimeRange === 'Today') {
           matchesTimeRange = caseDateStr === todayStr;
@@ -440,7 +440,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
 
         return matchesSearch && matchesStatus && matchesYear && matchesMonth && matchesTimeRange;
       })
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }, [searchTerm, filterStatus, filterYear, filterMonth, filterTimeRange, cases]);
 
   const paginatedCases = useMemo(() => {
@@ -591,7 +591,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                   <td className="px-10 py-8">
                     <div className="flex flex-col">
                       {(() => {
-                        const logs = clinicalEntries.filter(l => l.case_id === c.id);
+                        const logs = clinicalEntries.filter(l => l.caseId === c.id);
                         if (logs.length > 0) {
                           const sorted = [...logs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                           return (
@@ -601,7 +601,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                                 {sorted[0].date}
                               </p>
                               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 ml-5 flex items-center gap-1">
-                                {sorted[0].doctor_name}
+                                {sorted[0].doctorName}
                               </p>
                             </>
                           );
@@ -672,10 +672,10 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">{selectedCase.title}</h2>
-                  <div className="flex items-center gap-3 mt-1">
-                    <StatusBadge status={selectedCase.status as CaseStatus} />
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1"><Clock size={12}/> {selectedCase.created_at}</span>
-                  </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <StatusBadge status={selectedCase.status as CaseStatus} />
+                      <span className="text-xs font-bold text-slate-400 flex items-center gap-1"><Clock size={12}/> {selectedCase.createdAt}</span>
+                    </div>
                 </div>
               </div>
               
@@ -725,7 +725,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                  <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 flex gap-6">
                     <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0">
-                       <SanctuaryImage src={selectedCase.image_url} alt="Animal" className="w-full h-full object-cover" />
+                       <SanctuaryImage src={selectedCase.imageUrl} alt="Animal" className="w-full h-full object-cover" />
                     </div>
                     <div className="space-y-3 flex-1">
                        <div>
@@ -782,8 +782,8 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                             </td>
                             <td className="px-10 py-7 align-top">
                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#005F54] flex items-center justify-center font-black text-[10px] border border-emerald-100 uppercase">{(log.doctor_name || '?').charAt(0)}</div>
-                                  <span className="text-sm font-black text-slate-700">{log.doctor_name}</span>
+                                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#005F54] flex items-center justify-center font-black text-[10px] border border-emerald-100 uppercase">{(log.doctorName || '?').charAt(0)}</div>
+                                  <span className="text-sm font-black text-slate-700">{log.doctorName}</span>
                                </div>
                             </td>
                             <td className="px-10 py-7 align-top">
