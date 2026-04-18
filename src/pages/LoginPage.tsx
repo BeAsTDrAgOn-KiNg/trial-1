@@ -65,20 +65,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setError(null);
 
     try {
-      // Demo shortcut
-      if (identifier === 'admin' && password === 'admin') {
-        const demoUser: User = {
-          id: 'demo-admin',
-          full_name: 'System Admin',
-          email: 'admin@pfa.org',
-          role: 'Admin'
-        };
-        localStorage.setItem('pfa_user_session', JSON.stringify(demoUser));
-        onLogin(demoUser);
-        setIsLoading(false);
-        return;
-      }
-
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

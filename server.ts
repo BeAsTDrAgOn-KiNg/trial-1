@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -216,12 +217,20 @@ async function startServer() {
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { full_name, email, phone, role, password } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
-        data: { fullName: full_name, email, phone, role }
+        data: { 
+          fullName: full_name, 
+          email, 
+          phone, 
+          role,
+          password: hashedPassword
+        }
       });
-      // In a real app we would hash passwords, but keeping it simple for now
-      res.status(201).json(user);
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
     } catch (error: any) {
+      console.error('Registration error:', error);
       if (error.code === 'P2002') return res.status(400).json({ error: 'Email already exists' });
       res.status(500).json({ error: 'Registration failed' });
     }
@@ -232,8 +241,12 @@ async function startServer() {
       const { email, password } = req.body;
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-      // Simple logic for the demo environment
-      res.json(user);
+      
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ error: 'Login failed' });
     }

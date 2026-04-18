@@ -1,9 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seed started...');
+
+  const hashedPassword = await bcrypt.hash('admin123', 10);
 
   // 0. Default Users
   await prisma.user.createMany({
@@ -12,6 +15,7 @@ async function main() {
         id: 'admin-1',
         fullName: 'System Administrator',
         email: 'admin@pfa.org',
+        password: hashedPassword,
         role: 'Admin',
         phone: '1234567890',
       }
