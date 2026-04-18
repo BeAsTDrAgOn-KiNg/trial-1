@@ -35,6 +35,7 @@ interface AppContextType {
   medicineUsage: MedicineUsage[];
   staff: StaffMember[];
   userProfiles: UserProfile[];
+  lowStockMedicines: Medicine[];
   isLoading: boolean;
   
   // Actions
@@ -96,6 +97,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const lowStockMedicines = medicines.filter(m => m.quantity <= m.minStockLevel);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -407,7 +410,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }, 'Usage recorded', (saved) => setMedicineUsage(prev => [saved, ...prev]));
+    }, 'Usage recorded', (saved) => {
+      setMedicineUsage(prev => [saved, ...prev]);
+      // Also update local medicine quantity
+      setMedicines(prev => prev.map(m => 
+        m.id === saved.medicineId 
+          ? { ...m, quantity: m.quantity - parseFloat(saved.quantity) } 
+          : m
+      ));
+    });
   };
 
   const deleteMedicineUsage = async (id: string) => {
@@ -452,6 +463,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       medicineUsage,
       staff,
       userProfiles,
+      lowStockMedicines,
       isLoading,
       addAnimal,
       updateAnimal,

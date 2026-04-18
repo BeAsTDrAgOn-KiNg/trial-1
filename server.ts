@@ -397,10 +397,33 @@ async function startServer() {
 
   app.post('/api/medicine-usages', async (req, res) => {
     try {
-      const usage = await prisma.medicineUsage.create({ data: req.body });
+      const { medicineId, quantity, ...rest } = req.body;
+      const deduction = parseFloat(quantity) || 0;
+
+      // Use a transaction to ensure both operations succeed or fail together
+      const [usage] = await prisma.$transaction([
+        prisma.medicineUsage.create({ 
+          data: { 
+            medicineId, 
+            quantity: String(quantity), 
+            ...rest,
+            dateTime: new Date().toISOString()
+          } 
+        }),
+        prisma.medicine.update({
+          where: { id: medicineId },
+          data: {
+            quantity: {
+              decrement: deduction
+            }
+          }
+        })
+      ]);
+
       res.status(201).json(usage);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      console.error('Usage Error:', error);
+      res.status(500).json({ error: 'Failed to record usage or update stock' });
     }
   });
 

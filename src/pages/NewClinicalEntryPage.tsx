@@ -14,7 +14,8 @@ import {
   ChevronDown,
   PlusCircle,
   Trash2,
-  Package
+  Package,
+  X
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Case, ClinicalEntry } from '../types';
@@ -34,6 +35,7 @@ const NewClinicalEntryPage: React.FC = () => {
   });
 
   const [entry, setEntry] = useState(createInitialEntry());
+  const [selectedMeds, setSelectedMeds] = useState<{ id: string, quantity: number }[]>([]);
 
   useEffect(() => {
     const found = cases.find(c => c.id === caseId);
@@ -45,6 +47,21 @@ const NewClinicalEntryPage: React.FC = () => {
   const handleUpdateEntry = (field: string, value: string) => {
     setEntry(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleAddMed = (medId: string) => {
+    if (selectedMeds.find(m => m.id === medId)) return;
+    setSelectedMeds(prev => [...prev, { id: medId, quantity: 1 }]);
+  };
+
+  const handleRemoveMed = (medId: string) => {
+    setSelectedMeds(prev => prev.filter(m => m.id !== medId));
+  };
+
+  const handleUpdateMedQty = (medId: string, qty: number) => {
+    setSelectedMeds(prev => prev.map(m => m.id === medId ? { ...m, quantity: Math.max(1, qty) } : m));
+  };
+
+  const { addMedicineUsage } = useAppContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +83,23 @@ const NewClinicalEntryPage: React.FC = () => {
       };
 
       addClinicalEntry(newEntry);
-      alert("Clinical entry saved.");
+      
+      // Handle medicine usage
+      selectedMeds.forEach(m => {
+        const medicine = medicines.find(med => med.id === m.id);
+        if (medicine) {
+          addMedicineUsage({
+            medicineId: m.id,
+            medicineName: medicine.name,
+            quantity: m.quantity,
+            takenBy: entry.doctorName,
+            purpose: `Treatment for ${targetCase.title} (#${targetCase.id.toUpperCase()})`,
+            ward: targetCase.location || 'Clinic'
+          });
+        }
+      });
+
+      alert("Clinical entry saved and medicine stock updated.");
       
       navigate('/cases', { state: { openCaseId: caseId } });
     }
@@ -193,6 +226,89 @@ const NewClinicalEntryPage: React.FC = () => {
                   onChange={e => handleUpdateEntry('treatment', e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Medicine Inventory Link */}
+            <div className="space-y-6 pt-6 border-t border-slate-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-black border border-blue-100">
+                    2
+                  </div>
+                  <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Inventory Deduction</h4>
+                </div>
+                <div className="relative">
+                  <select 
+                    className="pl-4 pr-10 py-2 bg-slate-100 border-none rounded-xl text-xs font-black uppercase tracking-widest text-[#005F54] focus:ring-0 appearance-none cursor-pointer hover:bg-emerald-50 transition-colors"
+                    onChange={(e) => handleAddMed(e.target.value)}
+                    value=""
+                  >
+                    <option value="" disabled>+ Add Medicine from Stock</option>
+                    {medicines.filter(m => !selectedMeds.find(sm => sm.id === m.id)).map(med => (
+                      <option key={med.id} value={med.id}>{med.name} ({med.quantity} {med.unit})</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-600" />
+                </div>
+              </div>
+
+              {selectedMeds.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedMeds.map(sm => {
+                    const med = medicines.find(m => m.id === sm.id);
+                    return (
+                      <div key={sm.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#005F54] border border-slate-200">
+                            <Pill size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-800 tracking-tight">{med?.name}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Available: {med?.quantity} {med?.unit}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center bg-white rounded-xl border border-slate-200 px-2 py-1 shadow-sm">
+                            <button 
+                              type="button"
+                              onClick={() => handleUpdateMedQty(sm.id, sm.quantity - 1)}
+                              className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                            >
+                              <Trash2 size={14} className={sm.quantity === 1 ? 'text-rose-400' : 'text-slate-300'} />
+                            </button>
+                            <input 
+                              type="number"
+                              className="w-12 text-center text-sm font-black focus:outline-none border-none bg-transparent"
+                              value={sm.quantity}
+                              onChange={(e) => handleUpdateMedQty(sm.id, parseInt(e.target.value) || 1)}
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => handleUpdateMedQty(sm.id, sm.quantity + 1)}
+                              className="p-1 text-slate-400 hover:text-emerald-500 transition-colors"
+                            >
+                              <PlusCircle size={14} className="text-emerald-500" />
+                            </button>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => handleRemoveMed(sm.id)}
+                            className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-slate-50 border-2 border-dashed border-slate-100 rounded-[2rem]">
+                   <Package size={32} className="mx-auto text-slate-200 mb-3" />
+                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 italic">No medicines linked</p>
+                   <p className="text-[10px] text-slate-400 font-medium">Use the dropdown above to deduct stock used for this case.</p>
+                </div>
+              )}
             </div>
           </div>
 

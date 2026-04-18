@@ -6,6 +6,7 @@ import {
   Route, 
   Link, 
   useLocation,
+  useNavigate,
   Navigate 
 } from 'react-router-dom';
 import { 
@@ -25,7 +26,8 @@ import {
   History,
   Bird,
   Dna,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 
 import LoginPage from './pages/LoginPage';
@@ -47,9 +49,10 @@ import HousekeepingPage from './pages/HousekeepingPage';
 import AnimalDeclarationPage from './pages/AnimalDeclarationPage';
 import CensusReportPage from './pages/CensusReportPage';
 import HistoryPage from './pages/HistoryPage';
+import SearchResultsPage from './pages/SearchResultsPage';
 
 import { User } from './types';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useAppContext } from './context/AppContext';
 import { NotificationProvider } from './context/NotificationContext';
 
 interface SidebarLinkProps {
@@ -78,11 +81,121 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon: Icon, label, collap
   );
 };
 
+const AppHeader: React.FC<{ user: User, onLogout: () => void, onMenuClick: () => void }> = ({ user, onLogout, onMenuClick }) => {
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
+  const { lowStockMedicines } = useAppContext();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+      setSearchValue('');
+    }
+  };
+
+  return (
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10">
+      <button className="md:hidden p-2 -ml-2 text-slate-600" onClick={onMenuClick}>
+        <Menu size={24} />
+      </button>
+      <form onSubmit={handleSearch} className="hidden sm:flex items-center bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 w-1/3 group focus-within:ring-2 focus-within:ring-[#005F54]/20 focus-within:border-[#005F54] transition-all">
+        <Search size={16} className="text-slate-400 mr-2 group-focus-within:text-[#005F54]" />
+        <input 
+          type="text" 
+          placeholder="Global search (cases, animals, wildlife)..." 
+          className="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400" 
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+        />
+      </form>
+      <div className="flex items-center gap-2 md:gap-4">
+        <div className="relative">
+          <button 
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className={`relative p-2 rounded-full transition-colors ${isNotificationsOpen ? 'bg-slate-100 text-[#005F54]' : 'text-slate-500 hover:bg-slate-100'}`}
+          >
+            <Bell size={20} />
+            {lowStockMedicines.length > 0 && (
+              <span className="absolute top-2 right-2 w-4 h-4 bg-rose-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white ring-1 ring-rose-200">
+                {lowStockMedicines.length}
+              </span>
+            )}
+          </button>
+
+          {isNotificationsOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)}></div>
+              <div className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="px-5 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alerts & Notifications</h3>
+                  {lowStockMedicines.length > 0 && (
+                    <span className="px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-black rounded-lg">
+                      {lowStockMedicines.length} Urgent
+                    </span>
+                  )}
+                </div>
+                <div className="max-h-[350px] overflow-y-auto">
+                  {lowStockMedicines.length > 0 ? (
+                    <div className="divide-y divide-slate-50">
+                      {lowStockMedicines.map(med => (
+                        <div key={med.id} className="p-4 hover:bg-slate-50 transition-colors flex gap-3">
+                          <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 border border-amber-100 shrink-0">
+                            <AlertCircle size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-slate-800 leading-tight">Low Stock: {med.name}</p>
+                            <p className="text-[10px] font-medium text-slate-400 mt-0.5">
+                              Current level: <span className="text-rose-500 font-bold">{med.quantity} {med.unit}</span> (Min: {med.minStockLevel})
+                            </p>
+                            <Link 
+                              to="/inventory" 
+                              onClick={() => setIsNotificationsOpen(false)}
+                              className="inline-block mt-2 text-[10px] font-black text-[#005F54] uppercase tracking-widest hover:underline"
+                            >
+                              Restock Now →
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-10 text-center flex flex-col items-center gap-3">
+                       <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-300">
+                         <Sparkles size={24} />
+                       </div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">All caught up!</p>
+                       <p className="text-[10px] text-slate-400 font-medium">No urgent stock alerts at the moment.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.fullName}</p>
+            <p className="text-[10px] text-[#005F54] font-black uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">{user.role}</p>
+          </div>
+          <button 
+            className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm hover:scale-105 transition-transform"
+          >
+            {(user.fullName || 'U').charAt(0)}
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
 
   useEffect(() => {
     // Check local session
@@ -168,32 +281,12 @@ const App: React.FC = () => {
               </aside>
 
               <main className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10">
-                  <button className="md:hidden p-2 -ml-2 text-slate-600" onClick={() => setIsMobileMenuOpen(true)}>
-                    <Menu size={24} />
-                  </button>
-                  <div className="hidden sm:flex items-center bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 w-1/3">
-                    <Search size={16} className="text-slate-400 mr-2" />
-                    <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400" />
-                  </div>
-                  <div className="flex items-center gap-2 md:gap-4">
-                    <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
-                      <Bell size={20} />
-                      <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-                    </button>
-                    <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-                      <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.fullName}</p>
-                        <p className="text-[10px] text-[#005F54] font-black uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">{user.role}</p>
-                      </div>
-                      <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm">{(user.fullName || 'U').charAt(0)}</div>
-                    </div>
-                  </div>
-                </header>
+                <AppHeader user={user} onLogout={handleLogout} onMenuClick={() => setIsMobileMenuOpen(true)} />
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8">
                   <Routes>
                     <Route path="/" element={<DashboardPage user={user} />} />
+                    <Route path="/search" element={<SearchResultsPage />} />
                     <Route path="/cases" element={<CasesPage user={user} />} />
                     <Route path="/wildlife" element={<WildlifePage />} />
                     <Route path="/housekeeping" element={<HousekeepingPage />} />
