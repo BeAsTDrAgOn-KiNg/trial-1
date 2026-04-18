@@ -121,7 +121,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           medsRes, 
           houseRes, 
           donationsRes, 
-          appsRes
+          appsRes,
+          entriesRes,
+          abcRes,
+          declRes,
+          usageRes,
+          itemsRes,
+          adoptionsRes,
+          usersRes
         ] = await Promise.all([
           fetch('/api/animals'),
           fetch('/api/cases'),
@@ -130,7 +137,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           fetch('/api/inventory/medicines'),
           fetch('/api/inventory/housekeeping'),
           fetch('/api/donations'),
-          fetch('/api/adoptions/applications')
+          fetch('/api/adoptions/applications'),
+          fetch('/api/clinical-entries'),
+          fetch('/api/abc-records'),
+          fetch('/api/declarations'),
+          fetch('/api/medicine-usages'),
+          fetch('/api/inventory/items'),
+          fetch('/api/adoptions'),
+          fetch('/api/users')
         ]);
 
         if (animalsRes.ok) setAnimals(await animalsRes.json());
@@ -141,6 +155,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (houseRes.ok) setHousekeepingSupplies(await houseRes.json());
         if (donationsRes.ok) setDonations(await donationsRes.json());
         if (appsRes.ok) setAdoptionApplications(await appsRes.json());
+        if (entriesRes.ok) setClinicalEntries(await entriesRes.json());
+        if (abcRes.ok) setAbcRecords(await abcRes.json());
+        if (declRes.ok) setDeclarations(await declRes.json());
+        if (usageRes.ok) setMedicineUsage(await usageRes.json());
+        if (itemsRes.ok) setInventoryItems(await itemsRes.json());
+        if (adoptionsRes.ok) setAdoptions(await adoptionsRes.json());
+        if (usersRes.ok) setUserProfiles(await usersRes.json());
 
       } catch (err) {
         console.error('Failed to load data from backend:', err);
@@ -154,10 +175,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addAnimal = async (animal: Animal) => {
     try {
+      const { id, ...data } = animal; // Let prisma generate ID if it's a UUID model
       const res = await fetch('/api/animals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(animal),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -186,10 +208,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const addCase = async (newCase: Case) => {
     try {
+      const { id, ...data } = newCase;
       const res = await fetch('/api/cases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCase),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -216,16 +239,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
   
-  const addClinicalEntry = (entry: ClinicalEntry) => {
-    setClinicalEntries(prev => [entry, ...prev]);
+  const addClinicalEntry = async (entry: ClinicalEntry) => {
+    try {
+      const { id, ...data } = entry;
+      const res = await fetch('/api/clinical-entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setClinicalEntries(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding clinical entry:', err);
+    }
   };
 
   const addWildlifeCase = async (newCase: WildlifeCase) => {
     try {
+      const { id, ...data } = newCase;
       const res = await fetch('/api/wildlife', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCase),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -236,8 +273,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addDeclaration = (record: Declaration) => {
-    setDeclarations(prev => [record, ...prev]);
+  const addDeclaration = async (record: Declaration) => {
+    try {
+      const { id, ...data } = record;
+      const res = await fetch('/api/declarations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setDeclarations(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding declaration:', err);
+    }
   };
 
   const updateDeclaration = (record: Declaration) => {
@@ -246,10 +296,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addMedicine = async (newMed: Medicine) => {
     try {
+      const { id, ...data } = newMed;
       const res = await fetch('/api/inventory/medicines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMed),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -290,28 +341,63 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setDonations(prev => prev.filter(d => d.id !== id));
   };
 
-  const deleteAdoption = (id: string) => {
-    setAdoptions(prev => prev.filter(a => a.id !== id));
+  const deleteAdoption = async (id: string) => {
+    try {
+      const res = await fetch(`/api/adoptions/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAdoptions(prev => prev.filter(a => a.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting adoption:', err);
+    }
   };
 
   const deleteAdoptionApplication = (id: string) => {
     setAdoptionApplications(prev => prev.filter(a => a.id !== id));
   };
 
-  const deleteABCRecord = (id: string) => {
-    setAbcRecords(prev => prev.filter(a => a.id !== id));
+  const deleteABCRecord = async (id: string) => {
+    try {
+      const res = await fetch(`/api/abc-records/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAbcRecords(prev => prev.filter(a => a.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting ABC record:', err);
+    }
   };
 
-  const deleteHousekeepingSupply = (id: string) => {
-    setHousekeepingSupplies(prev => prev.filter(h => h.id !== id));
+  const deleteHousekeepingSupply = async (id: string) => {
+    try {
+      const res = await fetch(`/api/inventory/housekeeping/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setHousekeepingSupplies(prev => prev.filter(h => h.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting housekeeping supply:', err);
+    }
   };
 
-  const deleteInventoryItem = (id: string) => {
-    setInventoryItems(prev => prev.filter(i => i.id !== id));
+  const deleteInventoryItem = async (id: string) => {
+    try {
+      const res = await fetch(`/api/inventory/items/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setInventoryItems(prev => prev.filter(i => i.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting inventory item:', err);
+    }
   };
 
-  const deleteMedicineUsage = (id: string) => {
-    setMedicineUsage(prev => prev.filter(m => m.id !== id));
+  const deleteMedicineUsage = async (id: string) => {
+    try {
+      const res = await fetch(`/api/medicine-usages/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setMedicineUsage(prev => prev.filter(m => m.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting medicine usage:', err);
+    }
   };
 
   const deleteStaff = async (id: string) => {
@@ -347,20 +433,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const deleteClinicalEntry = (id: string) => {
-    setClinicalEntries(prev => prev.filter(c => c.id !== id));
+  const deleteClinicalEntry = async (id: string) => {
+    try {
+      const res = await fetch(`/api/clinical-entries/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setClinicalEntries(prev => prev.filter(c => c.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting clinical entry:', err);
+    }
   };
 
-  const deleteDeclaration = (id: string) => {
-    setDeclarations(prev => prev.filter(d => d.id !== id));
+  const deleteDeclaration = async (id: string) => {
+    try {
+      const res = await fetch(`/api/declarations/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setDeclarations(prev => prev.filter(d => d.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting declaration:', err);
+    }
   };
 
   const addDonation = async (donation: Donation) => {
     try {
+      const { id, ...data } = donation;
       const res = await fetch('/api/donations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(donation),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -371,16 +472,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addAdoption = (adoption: Adoption) => {
-    setAdoptions(prev => [adoption, ...prev]);
+  const addAdoption = async (adoption: Adoption) => {
+    try {
+      const { id, ...data } = adoption;
+      const res = await fetch('/api/adoptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setAdoptions(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding adoption:', err);
+    }
   };
 
   const addAdoptionApplication = async (application: AdoptionApplication) => {
     try {
+      const { id, ...data } = application;
       const res = await fetch('/api/adoptions/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(application),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();
@@ -395,40 +510,129 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setAdoptionApplications(prev => prev.map(a => a.id === application.id ? application : a));
   };
 
-  const addABCRecord = (record: ABCRecord) => {
-    setAbcRecords(prev => [record, ...prev]);
+  const addABCRecord = async (record: ABCRecord) => {
+    try {
+      const { id, ...data } = record;
+      const res = await fetch('/api/abc-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setAbcRecords(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding ABC record:', err);
+    }
   };
 
-  const updateABCRecord = (record: ABCRecord) => {
-    setAbcRecords(prev => prev.map(a => a.id === record.id ? record : a));
+  const updateABCRecord = async (record: ABCRecord) => {
+    try {
+      const res = await fetch(`/api/abc-records/${record.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setAbcRecords(prev => prev.map(a => a.id === saved.id ? saved : a));
+      }
+    } catch (err) {
+      console.error('Error updating ABC record:', err);
+    }
   };
 
-  const addHousekeepingSupply = (supply: HousekeepingSupply) => {
-    setHousekeepingSupplies(prev => [supply, ...prev]);
+  const addHousekeepingSupply = async (supply: HousekeepingSupply) => {
+    try {
+      const { id, ...data } = supply;
+      const res = await fetch('/api/inventory/housekeeping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setHousekeepingSupplies(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding housekeeping supply:', err);
+    }
   };
 
-  const updateHousekeepingSupply = (supply: HousekeepingSupply) => {
-    setHousekeepingSupplies(prev => prev.map(h => h.id === supply.id ? supply : h));
+  const updateHousekeepingSupply = async (supply: HousekeepingSupply) => {
+    try {
+      const res = await fetch(`/api/inventory/housekeeping/${supply.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supply),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setHousekeepingSupplies(prev => prev.map(h => h.id === saved.id ? saved : h));
+      }
+    } catch (err) {
+      console.error('Error updating housekeeping supply:', err);
+    }
   };
 
-  const addInventoryItem = (item: InventoryItem) => {
-    setInventoryItems(prev => [item, ...prev]);
+  const addInventoryItem = async (item: InventoryItem) => {
+    try {
+      const { id, ...data } = item;
+      const res = await fetch('/api/inventory/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setInventoryItems(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding inventory item:', err);
+    }
   };
 
-  const updateInventoryItem = (item: InventoryItem) => {
-    setInventoryItems(prev => prev.map(i => i.id === item.id ? item : i));
+  const updateInventoryItem = async (item: InventoryItem) => {
+    try {
+      const res = await fetch(`/api/inventory/items/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setInventoryItems(prev => prev.map(i => i.id === saved.id ? saved : i));
+      }
+    } catch (err) {
+      console.error('Error updating inventory item:', err);
+    }
   };
 
-  const addMedicineUsage = (usage: MedicineUsage) => {
-    setMedicineUsage(prev => [usage, ...prev]);
+  const addMedicineUsage = async (usage: MedicineUsage) => {
+    try {
+      const { id, ...data } = usage;
+      const res = await fetch('/api/medicine-usages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setMedicineUsage(prev => [saved, ...prev]);
+      }
+    } catch (err) {
+      console.error('Error adding medicine usage:', err);
+    }
   };
 
   const addStaff = async (member: StaffMember) => {
     try {
+      const { id, ...data } = member;
       const res = await fetch('/api/staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(member),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved = await res.json();

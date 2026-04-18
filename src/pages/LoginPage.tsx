@@ -33,24 +33,30 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       return;
     }
 
-    // Simulate registration delay
-    setTimeout(() => {
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        full_name: name,
-        email: identifier,
-        role: role,
-        phone: phone
-      };
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: name,
+          email: identifier,
+          phone: phone,
+          role: role,
+          password: password // In real app, hash it
+        })
+      });
 
-      // Save to local storage simulated users
-      const users = JSON.parse(localStorage.getItem('pfa_mock_users') || '[]');
-      users.push({ ...newUser, password });
-      localStorage.setItem('pfa_mock_users', JSON.stringify(users));
-
-      setGeneratedId(identifier);
+      if (res.ok) {
+        setGeneratedId(identifier);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Connection error');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -58,32 +64,46 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
 
-    // Simulate login delay
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('pfa_mock_users') || '[]');
-      const user = users.find((u: any) => (u.email === identifier || u.id === identifier) && u.password === password);
+    try {
+      // Demo shortcut
+      if (identifier === 'admin' && password === 'admin') {
+        const demoUser: User = {
+          id: 'demo-admin',
+          full_name: 'System Admin',
+          email: 'admin@pfa.org',
+          role: 'Admin'
+        };
+        localStorage.setItem('pfa_user_session', JSON.stringify(demoUser));
+        onLogin(demoUser);
+        setIsLoading(false);
+        return;
+      }
 
-      if (user) {
-        const { password: _, ...userToLogin } = user;
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier, password })
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        const userToLogin: User = {
+          id: user.id,
+          full_name: user.fullName,
+          email: user.email,
+          role: user.role,
+          phone: user.phone
+        };
         localStorage.setItem('pfa_user_session', JSON.stringify(userToLogin));
         onLogin(userToLogin);
       } else {
-        // Fallback for easy demo: if any credentials are "admin/admin", let them in
-        if (identifier === 'admin' && password === 'admin') {
-          const demoUser: User = {
-            id: 'demo-admin',
-            full_name: 'System Admin',
-            email: 'admin@pfa.org',
-            role: 'Admin'
-          };
-          localStorage.setItem('pfa_user_session', JSON.stringify(demoUser));
-          onLogin(demoUser);
-        } else {
-          setError("Invalid username/email or password.");
-        }
+        setError("Invalid credentials.");
       }
+    } catch (err) {
+      setError("Server connection failed.");
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   const leftSideImageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=2043";

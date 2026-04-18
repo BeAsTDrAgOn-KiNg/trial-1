@@ -212,6 +212,160 @@ async function startServer() {
   });
 
   // --- Inventory: Medicines ---
+  // --- Auth ---
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { full_name, email, phone, role, password } = req.body;
+      const user = await prisma.user.create({
+        data: { fullName: full_name, email, phone, role }
+      });
+      // In a real app we would hash passwords, but keeping it simple for now
+      res.status(201).json(user);
+    } catch (error: any) {
+      if (error.code === 'P2002') return res.status(400).json({ error: 'Email already exists' });
+      res.status(500).json({ error: 'Registration failed' });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+      // Simple logic for the demo environment
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  // --- Clinical Entries ---
+  app.get('/api/clinical-entries', async (req, res) => {
+    try {
+      const entries = await prisma.clinicalEntry.findMany({ orderBy: { createdAt: 'desc' } });
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/clinical-entries', async (req, res) => {
+    try {
+      const entry = await prisma.clinicalEntry.create({ data: req.body });
+      res.status(201).json(entry);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/clinical-entries/:id', async (req, res) => {
+    try {
+      await prisma.clinicalEntry.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  // --- ABC Records ---
+  app.get('/api/abc-records', async (req, res) => {
+    try {
+      const records = await prisma.aBCRecord.findMany();
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/abc-records', async (req, res) => {
+    try {
+      const record = await prisma.aBCRecord.create({ data: req.body });
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.patch('/api/abc-records/:id', async (req, res) => {
+    try {
+      const record = await prisma.aBCRecord.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(record);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/abc-records/:id', async (req, res) => {
+    try {
+      await prisma.aBCRecord.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  // --- Inventory: Housekeeping ---
+  app.post('/api/inventory/housekeeping', async (req, res) => {
+    try {
+      const item = await prisma.housekeepingSupply.create({ data: req.body });
+      res.status(201).json(item);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.patch('/api/inventory/housekeeping/:id', async (req, res) => {
+    try {
+      const item = await prisma.housekeepingSupply.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(item);
+    } catch (error) {
+       res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/inventory/housekeeping/:id', async (req, res) => {
+    try {
+      await prisma.housekeepingSupply.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  // --- Medicine Usage ---
+  app.get('/api/medicine-usages', async (req, res) => {
+    try {
+      const usages = await prisma.medicineUsage.findMany({ orderBy: { createdAt: 'desc' } });
+      res.json(usages);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/medicine-usages', async (req, res) => {
+    try {
+      const usage = await prisma.medicineUsage.create({ data: req.body });
+      res.status(201).json(usage);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/medicine-usages/:id', async (req, res) => {
+    try {
+      await prisma.medicineUsage.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
   app.post('/api/inventory/medicines', async (req, res) => {
     try {
       const med = await prisma.medicine.create({ data: req.body });
@@ -259,6 +413,114 @@ async function startServer() {
       res.status(201).json(appRecord);
     } catch (error) {
       res.status(500).json({ error: 'Failed to create adoption application' });
+    }
+  });
+
+  // --- Declarations ---
+  app.get('/api/declarations', async (req, res) => {
+    try {
+      const decls = await prisma.declaration.findMany({ orderBy: { createdAt: 'desc' } });
+      res.json(decls);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/declarations', async (req, res) => {
+    try {
+      const decl = await prisma.declaration.create({ data: req.body });
+      res.status(201).json(decl);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/declarations/:id', async (req, res) => {
+    try {
+      await prisma.declaration.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+       res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.get('/api/adoptions', async (req, res) => {
+    try {
+      const adoptions = await prisma.adoption.findMany({
+        include: { animal: true, user: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(adoptions);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/adoptions', async (req, res) => {
+    try {
+      const adoption = await prisma.adoption.create({ data: req.body });
+      res.status(201).json(adoption);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/adoptions/:id', async (req, res) => {
+    try {
+      await prisma.adoption.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+       res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  // --- Inventory: General Items ---
+  app.get('/api/inventory/items', async (req, res) => {
+    try {
+      const items = await prisma.inventoryItem.findMany({ orderBy: { name: 'asc' } });
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.post('/api/inventory/items', async (req, res) => {
+    try {
+      const item = await prisma.inventoryItem.create({ data: req.body });
+      res.status(201).json(item);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.patch('/api/inventory/items/:id', async (req, res) => {
+    try {
+      const item = await prisma.inventoryItem.update({
+        where: { id: req.params.id },
+        data: req.body
+      });
+      res.json(item);
+    } catch (error) {
+       res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  app.delete('/api/inventory/items/:id', async (req, res) => {
+    try {
+      await prisma.inventoryItem.delete({ where: { id: req.params.id } });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
+    }
+  });
+
+  // --- User Profiles ---
+  app.get('/api/users', async (req, res) => {
+    try {
+      const users = await prisma.user.findMany({ orderBy: { fullName: 'asc' } });
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed' });
     }
   });
 

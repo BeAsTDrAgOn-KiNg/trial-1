@@ -5,6 +5,20 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seed started...');
 
+  // 0. Default Users
+  await prisma.user.createMany({
+    data: [
+      {
+        id: 'admin-1',
+        fullName: 'System Administrator',
+        email: 'admin@pfa.org',
+        role: 'Admin',
+        phone: '1234567890',
+      }
+    ],
+    skipDuplicates: true,
+  });
+
   // 1. Staff Members
   await prisma.staffMember.createMany({
     data: [
