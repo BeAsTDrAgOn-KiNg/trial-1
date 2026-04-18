@@ -69,7 +69,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
   }, [searchTerm, selectedCategory, showOnlyLowStock]);
 
   const getMedicineStatus = (med: Medicine) => {
-    const isLow = med.quantity <= med.minStockLevel;
+    const isLow = med.quantity <= med.min_stock_level;
 
     if (isLow) {
       return { label: 'Low Stock', color: 'text-orange-600', bg: 'bg-orange-500' };
@@ -111,7 +111,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
     return ['All', ...sortedCats];
   }, [medicines]);
 
-  const lowStockCount = medicines.filter(m => m.quantity <= m.minStockLevel).length;
+  const lowStockCount = medicines.filter(m => m.quantity <= m.min_stock_level).length;
 
   // -- Stock Filtering Logic --
   const filteredMeds = useMemo(() => {
@@ -119,7 +119,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
       const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             med.category.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || med.category === selectedCategory;
-      const matchesLowStock = !showOnlyLowStock || med.quantity <= med.minStockLevel;
+      const matchesLowStock = !showOnlyLowStock || med.quantity <= med.min_stock_level;
       
       return matchesSearch && matchesCategory && matchesLowStock;
     });
@@ -136,18 +136,18 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
   const filteredHistory = useMemo(() => {
     return medicineUsage.filter(log => {
       // Find the medicine to check its category
-      const associatedMed = medicines.find(m => m.name === log.medicineName || m.id === log.medicineId);
+      const associatedMed = medicines.find(m => m.name === log.medicine_name || m.id === log.medicine_id);
       const medCategory = associatedMed ? associatedMed.category : 'Unknown';
 
-      const matchesSearch = log.medicineName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.takenBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = log.medicine_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            log.taken_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             log.purpose.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = historyCategoryFilter === 'All' || medCategory === historyCategoryFilter;
 
       return matchesSearch && matchesCategory;
     }).sort((a, b) => {
-      return b.dateTime.localeCompare(a.dateTime);
+      return b.date_time.localeCompare(a.date_time);
     });
   }, [searchTerm, historyCategoryFilter, medicines, medicineUsage]);
 
@@ -411,7 +411,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
                             <div className="flex-1 min-w-[140px] h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                               <div 
                                 className={`h-full rounded-full transition-all duration-1000 ${status.bg}`}
-                                style={{ width: `${Math.min((med.quantity / (med.minStockLevel * 2)) * 100, 100)}%` }}
+                                style={{ width: `${Math.min((med.quantity / (med.min_stock_level * 2)) * 100, 100)}%` }}
                               ></div>
                             </div>
                             <span className={`text-[10px] font-black uppercase tracking-tighter ${status.color}`}>
@@ -544,16 +544,16 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
                         <div className="flex flex-col">
                           <span className="text-sm font-black text-slate-900 tracking-tight leading-none mb-2">#{log.id.toUpperCase()}</span>
                           <div className="flex items-center gap-1.5 text-[9px] font-black text-[#005F54] uppercase tracking-widest bg-emerald-50 w-fit px-2 py-0.5 rounded-md">
-                             <Clock size={10} /> {log.dateTime}
+                             <Clock size={10} /> {log.date_time}
                           </div>
                         </div>
                       </td>
                       <td className="px-10 py-7">
                         <div className="flex items-center gap-3">
                            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-[10px] font-black uppercase tracking-widest">
-                             {(log.medicineName || '?').charAt(0)}
+                             {(log.medicine_name || '?').charAt(0)}
                            </div>
-                           <span className="text-sm font-black text-slate-800">{log.medicineName}</span>
+                           <span className="text-sm font-black text-slate-800">{log.medicine_name}</span>
                         </div>
                       </td>
                       <td className="px-10 py-7 text-center">
@@ -564,10 +564,10 @@ const InventoryPage: React.FC<InventoryPageProps> = ({ user }) => {
                       <td className="px-10 py-7">
                         <div className="flex items-center gap-3">
                            <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-slate-400 text-[10px]">
-                             {log.takenBy.split(' ').map(n => n[0]).join('')}
+                             {log.taken_by.split(' ').map(n => n[0]).join('')}
                            </div>
                            <div>
-                             <p className="text-sm font-black text-slate-800 tracking-tight leading-none">{log.takenBy}</p>
+                             <p className="text-sm font-black text-slate-800 tracking-tight leading-none">{log.taken_by}</p>
                              <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Location: {log.ward || 'General'}</p>
                            </div>
                         </div>

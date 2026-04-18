@@ -1,39 +1,25 @@
-import { supabase } from './supabase';
-
 /**
- * Uploads a file to Supabase Storage and returns the public URL.
+ * Simulates uploading a file by returning a local object URL.
  * @param file The file to upload
- * @param bucket The name of the storage bucket
- * @param path The path within the bucket (e.g., 'cases/image.jpg')
+ * @param bucket The name of the storage bucket (unused in simulation)
+ * @param path The path within the bucket (unused in simulation)
  */
 export const uploadFile = async (file: File, bucket: string, path: string): Promise<string | null> => {
   try {
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error('Error uploading file:', uploadError.message);
-      return null;
-    }
-
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(path);
-
-    return data.publicUrl;
+    // Simulating a network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In a real local-only app, we use createObjectURL. 
+    // Note: These URLs are revoked when the page is closed/refreshed.
+    return URL.createObjectURL(file);
   } catch (error) {
-    console.error('Unexpected error during upload:', error);
+    console.error('Unexpected error during sim-upload:', error);
     return null;
   }
 };
 
 /**
  * Converts a base64 string to a File object.
- * Useful if you're still using the current base64 capture logic but want to upload to Supabase.
  */
 export const base64ToFile = (base64: string, filename: string): File => {
   const arr = base64.split(',');

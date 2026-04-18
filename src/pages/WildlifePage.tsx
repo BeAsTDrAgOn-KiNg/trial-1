@@ -71,7 +71,7 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
             </div>
             <div className="text-right">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Document Registry #</p>
-              <p className="text-xl font-black text-[#005F54]">TFR-{transfer.caseNumber}</p>
+              <p className="text-xl font-black text-[#005F54]">TFR-{transfer.case_number}</p>
             </div>
           </div>
 
@@ -83,11 +83,11 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
               <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Full Name</p>
-                  <p className="text-sm font-black text-slate-800">{transfer.complainantName}</p>
+                  <p className="text-sm font-black text-slate-800">{transfer.complainant_name}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Contact Identity</p>
-                  <p className="text-sm font-bold text-slate-600">{transfer.complainantPhone || 'N/A'}</p>
+                  <p className="text-sm font-bold text-slate-600">{transfer.complainant_phone || 'N/A'}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rescue Geography</p>
@@ -110,7 +110,7 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Departure Timestamp</p>
                   <p className="text-sm font-bold text-slate-600 flex items-center gap-1.5">
-                    <Clock size={12} className="text-[#005F54]" /> {transfer.dateTime}
+                    <Clock size={12} className="text-[#005F54]" /> {transfer.date_time}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -123,13 +123,13 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
             </section>
           </div>
 
-          {transfer.imageUrl && (
+          {transfer.image_url && (
             <div className="pt-6 border-t border-slate-100">
                <h3 className="text-xs font-black text-[#005F54] uppercase tracking-[0.25em] flex items-center gap-2 mb-4">
                 <Camera size={14} /> Identification Photo
               </h3>
               <div className="w-full h-64 rounded-[2rem] overflow-hidden border-2 border-slate-100 shadow-inner">
-                <img src={transfer.imageUrl} alt="Animal" className="w-full h-full object-cover" />
+                <img src={transfer.image_url} alt="Animal" className="w-full h-full object-cover" />
               </div>
             </div>
           )}
@@ -142,11 +142,11 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
               <div className="flex gap-8">
                  <div>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Reported Date</p>
-                    <p className="text-sm font-bold text-slate-700">{transfer.reportedDate || 'N/A'}</p>
+                    <p className="text-sm font-bold text-slate-700">{transfer.reported_date || 'N/A'}</p>
                  </div>
                  <div>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resolved Date</p>
-                    <p className="text-sm font-bold text-slate-700">{transfer.resolvedDate || 'N/A'}</p>
+                    <p className="text-sm font-bold text-slate-700">{transfer.resolved_date || 'N/A'}</p>
                  </div>
               </div>
             </section>
@@ -173,7 +173,7 @@ const TransferFormPreview = ({ transfer, onClose }: { transfer: any; onClose: ()
                 </div>
               </div>
               <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">
-                Verified digital fingerprint: TFR-{transfer.caseNumber.split('').reverse().join('').slice(0, 8)}-{transfer.id}
+                Verified digital fingerprint: TFR-{transfer.case_number.split('').reverse().join('').slice(0, 8)}-{transfer.id}
               </p>
             </div>
             
@@ -210,20 +210,20 @@ const WildlifePage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    caseNumber: '',
-    complainantName: '',
-    phoneNumber: '',
-    rescueArea: '',
-    detailedAddress: '',
-    specificType: 'Dog',
-    recipientEmail: 'bangalore@pfa.org',
-    medicalHistory: '',
+    case_number: '',
+    complainant_name: '',
+    phone_number: '',
+    rescue_area: '',
+    detailed_address: '',
+    specific_type: 'Dog',
+    recipient_email: 'bangalore@pfa.org',
+    medical_history: '',
     description: '',
     age: '',
     gender: 'Male',
-    reportedDate: new Date().toISOString().split('T')[0],
-    resolvedDate: new Date().toISOString().split('T')[0],
-    dateTime: new Date().toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }),
+    reported_date: new Date().toISOString().split('T')[0],
+    resolved_date: new Date().toISOString().split('T')[0],
+    date_time: new Date().toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }),
   });
 
   // Handle outside clicks for area dropdown
@@ -248,7 +248,7 @@ const WildlifePage: React.FC = () => {
       setShowAreaSuggestions(false);
       return;
     }
-    setFormData({ ...formData, rescueArea: area });
+    setFormData({ ...formData, rescue_area: area });
     setAreaSearch(area);
     setShowAreaSuggestions(false);
   };
@@ -259,7 +259,7 @@ const WildlifePage: React.FC = () => {
     if (!availableAreas.includes(newArea)) {
       setAvailableAreas(prev => [...prev, newArea].sort());
     }
-    setFormData({ ...formData, rescueArea: newArea });
+    setFormData({ ...formData, rescue_area: newArea });
     setAreaSearch(newArea);
     setIsCustomAreaMode(false);
     setCustomAreaInput('');
@@ -268,15 +268,15 @@ const WildlifePage: React.FC = () => {
   const sortedHistory = useMemo(() => {
     return [...wildlifeCases]
       .filter(t => 
-        t.caseNumber.includes(searchTerm) || 
+        t.case_number.includes(searchTerm) || 
         t.animal.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.complainantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.complainant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (t.signature || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => {
-        const dateA = new Date(a.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + a.dateTime.split(' ')[1]);
-        const dateB = new Date(b.dateTime.split(' ')[0].split('/').reverse().join('-') + ' ' + b.dateTime.split(' ')[1]);
+        const dateA = new Date(a.date_time.split(' ')[0].split('/').reverse().join('-') + ' ' + a.date_time.split(' ')[1]);
+        const dateB = new Date(b.date_time.split(' ')[0].split('/').reverse().join('-') + ' ' + b.date_time.split(' ')[1]);
         return dateB.getTime() - dateA.getTime();
       });
   }, [wildlifeCases, searchTerm]);
@@ -291,7 +291,7 @@ const WildlifePage: React.FC = () => {
     let yearly = 0;
 
     wildlifeCases.forEach(t => {
-      const dateParts = t.dateTime.split(' ')[0].split('/');
+      const dateParts = t.date_time.split(' ')[0].split('/');
       const month = parseInt(dateParts[1]) - 1;
       const year = parseInt(dateParts[2]);
 
@@ -308,52 +308,52 @@ const WildlifePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.phoneNumber.length !== 10) {
+    if (formData.phone_number.length !== 10) {
       alert("Reporter phone number must be exactly 10 digits.");
       return;
     }
-    if (!formData.rescueArea) {
+    if (!formData.rescue_area) {
       alert("Please select a Rescue Area.");
       return;
     }
 
-    const combinedLoc = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
+    const combinedLoc = `${formData.rescue_area}${formData.detailed_address ? `, ${formData.detailed_address}` : ''}`;
 
     let finalImageUrl = selectedImage || undefined;
 
-    // Supabase Upload Logic
+    // Simulation Upload Logic
     if (selectedImage && selectedImage.startsWith('data:')) {
       try {
-        const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
+        const file = base64ToFile(selectedImage, `${formData.case_number}-${Date.now()}.jpg`);
         const uploadedUrl = await uploadFile(file, 'animal-records', `wildlife/${file.name}`);
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl;
         }
       } catch (error) {
-        console.error('Supabase upload failed, falling back to local storage:', error);
+        console.error('Simulation upload failed:', error);
       }
     }
 
     const newTransfer: WildlifeCase = {
       id: `TFR-${Date.now()}`,
-      caseNumber: formData.caseNumber,
-      dateTime: formData.dateTime,
-      animal: formData.specificType,
-      species: formData.specificType,
+      case_number: formData.case_number,
+      date_time: formData.date_time,
+      animal: formData.specific_type,
+      species: formData.specific_type,
       schedule: 'Standard',
       location: combinedLoc,
       status: 'Pending',
-      complainantName: formData.complainantName,
-      complainantPhone: formData.phoneNumber,
-      isReadyForRelease: false,
-      sentFor: 'Treatment',
+      complainant_name: formData.complainant_name,
+      complainant_phone: formData.phone_number,
+      is_ready_for_release: false,
+      sent_for: 'Treatment',
       destination: 'Bangalore Division',
-      correspondence: formData.description || formData.medicalHistory || 'No correspondence text recorded.',
+      correspondence: formData.description || formData.medical_history || 'No correspondence text recorded.',
       signature: 'Current User',
-      reportedDate: formData.reportedDate,
-      resolvedDate: formData.resolvedDate,
-      imageUrl: finalImageUrl,
-      createdAt: new Date().toISOString()
+      reported_date: formData.reported_date,
+      resolved_date: formData.resolved_date,
+      image_url: finalImageUrl,
+      created_at: new Date().toISOString()
     };
 
     addWildlifeCase(newTransfer);
@@ -385,25 +385,25 @@ const WildlifePage: React.FC = () => {
   };
 
   const handleSendEmail = () => {
-    const combinedLoc = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
-    const subject = encodeURIComponent(`Wildlife Case Transfer: ${formData.caseNumber} - ${formData.specificType}`);
+    const combinedLoc = `${formData.rescue_area}${formData.detailed_address ? `, ${formData.detailed_address}` : ''}`;
+    const subject = encodeURIComponent(`Wildlife Case Transfer: ${formData.case_number} - ${formData.specific_type}`);
     const bodyText = `PFA Registry Transfer Request\n\n` +
       `Dear PFA Division Team,\n\n` +
       `Please find the details for the following wildlife transfer:\n\n` +
-      `Case Number: ${formData.caseNumber}\n` +
-      `Animal Species: ${formData.specificType}\n` +
-      `Reporter: ${formData.complainantName}\n` +
+      `Case Number: ${formData.case_number}\n` +
+      `Animal Species: ${formData.specific_type}\n` +
+      `Reporter: ${formData.complainant_name}\n` +
       `Location: ${combinedLoc}\n\n` +
       `Chronology:\n` +
-      `- Reported Date: ${formData.reportedDate}\n` +
-      `- Resolved/Transfer Date: ${formData.resolvedDate}\n` +
-      `- Documentation Timestamp: ${formData.dateTime}\n\n` +
+      `- Reported Date: ${formData.reported_date}\n` +
+      `- Resolved/Transfer Date: ${formData.resolved_date}\n` +
+      `- Documentation Timestamp: ${formData.date_time}\n\n` +
       `IMPORTANT REQUEST: Please reply to this email thread with the official internal Document Form ID / Reference generated at your end for our reconciliation records.\n\n` +
       `Best regards,\n` +
       `PFA Mysuru Sanctuary Team`;
     
     const body = encodeURIComponent(bodyText);
-    const recipient = formData.recipientEmail || 'bangalore@pfa.org';
+    const recipient = formData.recipient_email || 'bangalore@pfa.org';
     
     // Redirect to Gmail web compose window. 'to' is auto-filled as requested. 'from' is left to be handled by the user's Gmail.
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`;
@@ -468,7 +468,7 @@ const WildlifePage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-3">
                 <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Case Number *</label>
-                <input required type="text" placeholder="e.g., 2025001" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all placeholder:text-slate-300" value={formData.caseNumber} onChange={e => setFormData({...formData, caseNumber: e.target.value})} />
+                <input required type="text" placeholder="e.g., 2025001" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all placeholder:text-slate-300" value={formData.case_number} onChange={e => setFormData({...formData, case_number: e.target.value})} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -476,7 +476,7 @@ const WildlifePage: React.FC = () => {
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Reporter Name *</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input required type="text" placeholder="Full legal name" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.complainantName} onChange={e => setFormData({...formData, complainantName: e.target.value})} />
+                    <input required type="text" placeholder="Full legal name" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.complainant_name} onChange={e => setFormData({...formData, complainant_name: e.target.value})} />
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -490,8 +490,8 @@ const WildlifePage: React.FC = () => {
                       maxLength={10}
                       placeholder="10-digit Number" 
                       className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" 
-                      value={formData.phoneNumber} 
-                      onChange={e => setFormData({...formData, phoneNumber: e.target.value.replace(/\D/g, '')})} 
+                      value={formData.phone_number} 
+                      onChange={e => setFormData({...formData, phone_number: e.target.value.replace(/\D/g, '')})} 
                     />
                   </div>
                 </div>
@@ -563,8 +563,8 @@ const WildlifePage: React.FC = () => {
                     type="text"
                     placeholder="Street, Landmark..." 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" 
-                    value={formData.detailedAddress} 
-                    onChange={e => setFormData({...formData, detailedAddress: e.target.value})} 
+                    value={formData.detailed_address} 
+                    onChange={e => setFormData({...formData, detailed_address: e.target.value})} 
                   />
                 </div>
               </div>
@@ -574,14 +574,14 @@ const WildlifePage: React.FC = () => {
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Reported Date *</label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input required type="date" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.reportedDate} onChange={e => setFormData({...formData, reportedDate: e.target.value})} />
+                    <input required type="date" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.reported_date} onChange={e => setFormData({...formData, reported_date: e.target.value})} />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Resolved Date</label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input type="date" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.resolvedDate} onChange={e => setFormData({...formData, resolvedDate: e.target.value})} />
+                    <input type="date" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.resolved_date} onChange={e => setFormData({...formData, resolved_date: e.target.value})} />
                   </div>
                 </div>
               </div>
@@ -589,7 +589,7 @@ const WildlifePage: React.FC = () => {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Animal Species / Type *</label>
-                  <input required type="text" placeholder="Dog, Indian Rock Python, Barn Owl, etc." className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.specificType} onChange={e => setFormData({...formData, specificType: e.target.value})} />
+                  <input required type="text" placeholder="Dog, Indian Rock Python, Barn Owl, etc." className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.specific_type} onChange={e => setFormData({...formData, specific_type: e.target.value})} />
                 </div>
 
                 <div className="space-y-3">
@@ -635,7 +635,7 @@ const WildlifePage: React.FC = () => {
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Recipient Email (Notification Record) *</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input required type="email" placeholder="e.g. bangalore@pfa.org" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.recipientEmail} onChange={e => setFormData({...formData, recipientEmail: e.target.value})} />
+                    <input required type="email" placeholder="e.g. bangalore@pfa.org" className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.recipient_email} onChange={e => setFormData({...formData, recipient_email: e.target.value})} />
                   </div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 ml-1 flex items-center gap-1.5">
                     <Info size={12} className="text-blue-500" /> This record will be used to auto-fill the 'To' address in the Gmail compose window.
@@ -731,9 +731,9 @@ const WildlifePage: React.FC = () => {
                       <tr key={t.id} onClick={() => setViewingTransfer(t)} className="group hover:bg-emerald-50/10 transition-colors cursor-pointer">
                         <td className="px-8 py-7">
                           <div className="flex flex-col">
-                            <p className="text-base font-black text-slate-900 tracking-tight mb-1">#{t.caseNumber}</p>
+                            <p className="text-base font-black text-slate-900 tracking-tight mb-1">#{t.case_number}</p>
                             <div className="flex items-center gap-1.5 text-[9px] font-black text-[#005F54] uppercase tracking-widest bg-emerald-50 w-fit px-2 py-0.5 rounded-md">
-                               <Clock size={10} /> {t.dateTime}
+                               <Clock size={10} /> {t.date_time}
                             </div>
                           </div>
                         </td>
@@ -746,19 +746,19 @@ const WildlifePage: React.FC = () => {
                            <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1">
                                  <span className="text-[9px] font-black text-slate-400 uppercase">REP:</span>
-                                 <span className="text-[10px] font-bold text-slate-600">{t.reportedDate}</span>
+                                 <span className="text-[10px] font-bold text-slate-600">{t.reported_date}</span>
                               </div>
                               <div className="flex items-center gap-1">
                                  <span className="text-[9px] font-black text-slate-400 uppercase">RES:</span>
-                                 <span className="text-[10px] font-bold text-slate-600">{t.resolvedDate}</span>
+                                 <span className="text-[10px] font-bold text-slate-600">{t.resolved_date}</span>
                               </div>
                            </div>
                         </td>
                         <td className="px-8 py-7">
                            <div className="flex flex-col">
-                             <span className="text-sm font-black text-slate-700">{t.complainantName}</span>
+                             <span className="text-sm font-black text-slate-700">{t.complainant_name}</span>
                              <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5 mt-1">
-                               <Phone size={10} className="text-[#005F54]" /> {t.complainantPhone || 'N/A'}
+                               <Phone size={10} className="text-[#005F54]" /> {t.complainant_phone || 'N/A'}
                              </span>
                            </div>
                         </td>

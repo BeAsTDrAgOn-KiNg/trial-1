@@ -34,8 +34,8 @@ const AnimalDeclarationPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const initialFormState = {
-    formNo: '',
-    declarerName: '',
+    form_no: '',
+    declarer_name: '',
     address: '',
     phone: '',
     email: '',
@@ -52,8 +52,8 @@ const AnimalDeclarationPage: React.FC = () => {
 
   const handleEdit = (record: Declaration) => {
     setFormData({
-      formNo: record.formNo,
-      declarerName: record.declarerName,
+      form_no: record.form_no,
+      declarer_name: record.declarer_name,
       address: record.address,
       phone: record.phone,
       email: record.email,
@@ -87,8 +87,8 @@ const AnimalDeclarationPage: React.FC = () => {
 
     const newRecord: Declaration = {
       id: editingId || Date.now().toString(),
-      formNo: formData.formNo || (editingId ? (declarations.find(r => r.id === editingId)?.formNo || '') : `DEC-2024-${String(declarations.length + 1).padStart(3, '0')}`),
-      declarerName: formData.declarerName,
+      form_no: formData.form_no || (editingId ? (declarations.find(r => r.id === editingId)?.form_no || '') : `DEC-2024-${String(declarations.length + 1).padStart(3, '0')}`),
+      declarer_name: formData.declarer_name,
       address: formData.address,
       phone: formData.phone,
       email: formData.email,
@@ -97,7 +97,7 @@ const AnimalDeclarationPage: React.FC = () => {
       age: formData.age,
       description: formData.description,
       date: formData.date || new Date().toISOString().split('T')[0],
-      createdAt: editingId ? (declarations.find(r => r.id === editingId)?.createdAt) : new Date().toISOString()
+      created_at: editingId ? (declarations.find(r => r.id === editingId)?.created_at) : new Date().toISOString()
     };
 
     if (editingId) {
@@ -115,7 +115,7 @@ const AnimalDeclarationPage: React.FC = () => {
         state: { 
           fromDeclaration: true,
           declarerData: {
-            name: formData.declarerName,
+            name: formData.declarer_name,
             address: formData.address,
             phone: formData.phone,
             species: `${formData.species}, ${formData.gender}`, // Concatenated for the mapper in NewCasePage
@@ -133,8 +133,8 @@ const AnimalDeclarationPage: React.FC = () => {
 
   const filteredRecords = useMemo(() => {
     return declarations.filter(r => 
-      r.declarerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.formNo.toLowerCase().includes(searchTerm.toLowerCase())
+      r.declarer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.form_no.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [declarations, searchTerm]);
 
@@ -199,8 +199,8 @@ const AnimalDeclarationPage: React.FC = () => {
                      <input 
                        placeholder="e.g., FORM-1234" 
                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
-                       value={formData.formNo}
-                       onChange={e => setFormData({...formData, formNo: e.target.value})}
+                       value={formData.form_no}
+                       onChange={e => setFormData({...formData, form_no: e.target.value})}
                      />
                    </div>
                    <div className="space-y-2">
@@ -209,8 +209,8 @@ const AnimalDeclarationPage: React.FC = () => {
                        required 
                        placeholder="I, Mr. /Mrs. /Ms. ..." 
                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
-                       value={formData.declarerName}
-                       onChange={e => setFormData({...formData, declarerName: e.target.value})}
+                       value={formData.declarer_name}
+                       onChange={e => setFormData({...formData, declarer_name: e.target.value})}
                      />
                    </div>
                    <div className="space-y-2">
@@ -442,11 +442,11 @@ const AnimalDeclarationPage: React.FC = () => {
                       {filteredRecords.map((r) => (
                         <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
                            <td className="px-10 py-7">
-                              <span className="text-sm font-black text-slate-800">{r.formNo}</span>
+                              <span className="text-sm font-black text-slate-800">{r.form_no}</span>
                            </td>
                            <td className="px-10 py-7">
                               <div className="flex flex-col">
-                                <span className="text-sm font-bold text-slate-700">{r.declarerName}</span>
+                                <span className="text-sm font-bold text-slate-700">{r.declarer_name}</span>
                                 <span className="text-[10px] text-slate-400 uppercase font-bold">{r.phone}</span>
                               </div>
                            </td>

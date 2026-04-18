@@ -51,7 +51,6 @@ import HistoryPage from './pages/HistoryPage';
 
 import { User } from './types';
 import { AppProvider } from './context/AppContext';
-import { supabase } from './lib/supabase';
 import { useEffect } from 'react';
 
 interface SidebarLinkProps {
@@ -87,48 +86,20 @@ const App: React.FC = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and subscribe to auth changes
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Fetch user profile from public.user_profiles or use metadata
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setUser(profile);
-        } else {
-          // Fallback to metadata if profile doesn't exist yet
-          setUser({
-            id: session.user.id,
-            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
-            email: session.user.email || '',
-            role: session.user.user_metadata.role || 'Data Entry',
-            phone: ''
-          });
-        }
+    // Check local session
+    const savedUser = localStorage.getItem('pfa_user_session');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('pfa_user_session');
       }
-      setIsAuthLoading(false);
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        checkUser();
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setIsAuthLoading(false);
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem('pfa_user_session');
     setUser(null);
   };
 
@@ -215,10 +186,10 @@ const App: React.FC = () => {
                   </button>
                   <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                     <div className="text-right hidden sm:block">
-                      <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.name}</p>
+                      <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.full_name}</p>
                       <p className="text-[10px] text-[#005F54] font-black uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">{user.role}</p>
                     </div>
-                    <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm">{(user.name || 'U').charAt(0)}</div>
+                    <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm">{(user.full_name || 'U').charAt(0)}</div>
                   </div>
                 </div>
               </header>

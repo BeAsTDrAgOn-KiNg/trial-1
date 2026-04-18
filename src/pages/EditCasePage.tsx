@@ -53,7 +53,7 @@ const EditCasePage: React.FC = () => {
       
       setFormData({
         caseNumber: caseNumber,
-        dateTime: foundCase.createdAt || '',
+        dateTime: foundCase.created_at || '',
         location: foundCase.location,
         compName: '', // These are now buried in description
         compPhone: '',
@@ -65,7 +65,7 @@ const EditCasePage: React.FC = () => {
         description: foundCase.description,
         status: foundCase.status as CaseStatus
       });
-      setSelectedImage(foundCase.imageUrl || null);
+      setSelectedImage(foundCase.image_url || null);
       setLoading(false);
     } else {
       alert("Case not found.");
@@ -90,7 +90,7 @@ const EditCasePage: React.FC = () => {
     if (targetCase) {
       let finalImageUrl = selectedImage || undefined;
 
-      // Supabase Upload Logic (only if it's a new base64 image)
+      // Simulation Upload Logic (only if it's a new base64 image)
       if (selectedImage && selectedImage.startsWith('data:')) {
         try {
           const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
@@ -99,7 +99,7 @@ const EditCasePage: React.FC = () => {
             finalImageUrl = uploadedUrl;
           }
         } catch (error) {
-          console.error('Supabase upload failed, falling back to local storage:', error);
+          console.error('Simulation upload failed:', error);
         }
       }
 
@@ -109,7 +109,7 @@ const EditCasePage: React.FC = () => {
         location: formData.location,
         description: formData.description,
         status: formData.status,
-        imageUrl: finalImageUrl,
+        image_url: finalImageUrl,
       };
 
       updateCase(updatedCase);

@@ -24,7 +24,6 @@ import { useAppContext } from '../context/AppContext';
 import { MYSURU_AREAS as GLOBAL_MYSURU_AREAS } from '../constants';
 import { Case, CaseStatus } from '../types';
 import { uploadFile, base64ToFile } from '../lib/storage';
-import { supabase } from '../lib/supabase';
 
 const NewCasePage: React.FC = () => {
   const navigate = useNavigate();
@@ -175,7 +174,7 @@ const NewCasePage: React.FC = () => {
 
     let finalImageUrl = selectedImage || undefined;
 
-    // Supabase Upload Logic
+    // Simulation Upload Logic
     if (selectedImage && selectedImage.startsWith('data:')) {
       try {
         const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
@@ -184,9 +183,13 @@ const NewCasePage: React.FC = () => {
           finalImageUrl = uploadedUrl;
         }
       } catch (error) {
-        console.error('Supabase upload failed, falling back to local storage:', error);
+        console.error('Simulation upload failed:', error);
       }
     }
+
+    // Get current user from local session
+    const savedUser = localStorage.getItem('pfa_user_session');
+    const user = savedUser ? JSON.parse(savedUser) : null;
 
       const newCase: Case = {
         id: Math.random().toString(36).substr(2, 9),
@@ -194,10 +197,11 @@ const NewCasePage: React.FC = () => {
         location: combinedLocation,
         description: `Age: ${formData.age}\nGender: ${formData.gender}\n\n${formData.description || 'No detailed assessment provided.'}\n\nReporter: ${formData.compName || 'Anonymous'} (${formData.compPhone || 'N/A'})\nReporter Address: ${formData.compAddress || 'N/A'}`,
         status: CaseStatus.UNDER_TREATMENT,
-        reportedBy: undefined, // user_id would go here
-        imageUrl: finalImageUrl,
-        createdAt: new Date().toISOString()
+        reported_by: user?.id,
+        image_url: finalImageUrl,
+        created_at: new Date().toISOString()
       };
+
 
     addCase(newCase);
     

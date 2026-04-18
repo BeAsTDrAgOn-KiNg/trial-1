@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Role } from '../types';
 import { ShieldCheck, UserCircle, HeartHandshake, Eye, EyeOff, ShieldAlert, Mail, User as UserIcon, AlertCircle, ChevronDown, CheckCircle, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -34,44 +33,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       return;
     }
 
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+    // Simulate registration delay
+    setTimeout(() => {
+      const newUser: User = {
+        id: Math.random().toString(36).substr(2, 9),
+        full_name: name,
         email: identifier,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            role: role,
-            phone: phone
-          }
-        }
-      });
+        role: role,
+        phone: phone
+      };
 
-      if (signUpError) throw signUpError;
+      // Save to local storage simulated users
+      const users = JSON.parse(localStorage.getItem('pfa_mock_users') || '[]');
+      users.push({ ...newUser, password });
+      localStorage.setItem('pfa_mock_users', JSON.stringify(users));
 
-      if (data.user) {
-        // Create user profile in public.user_profiles
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert([
-            {
-              id: data.user.id,
-              name: name,
-              email: identifier,
-              role: role,
-              phone: phone
-            }
-          ]);
-
-        if (profileError) console.error('Error creating profile:', profileError);
-        
-        setGeneratedId(identifier);
-      }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during registration.");
-    } finally {
+      setGeneratedId(identifier);
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -79,22 +58,32 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: identifier,
-        password,
-      });
+    // Simulate login delay
+    setTimeout(() => {
+      const users = JSON.parse(localStorage.getItem('pfa_mock_users') || '[]');
+      const user = users.find((u: any) => (u.email === identifier || u.id === identifier) && u.password === password);
 
-      if (signInError) throw signInError;
-
-      if (data.user) {
-        // Profile fetching is handled in App.tsx via onAuthStateChanged
+      if (user) {
+        const { password: _, ...userToLogin } = user;
+        localStorage.setItem('pfa_user_session', JSON.stringify(userToLogin));
+        onLogin(userToLogin);
+      } else {
+        // Fallback for easy demo: if any credentials are "admin/admin", let them in
+        if (identifier === 'admin' && password === 'admin') {
+          const demoUser: User = {
+            id: 'demo-admin',
+            full_name: 'System Admin',
+            email: 'admin@pfa.org',
+            role: 'Admin'
+          };
+          localStorage.setItem('pfa_user_session', JSON.stringify(demoUser));
+          onLogin(demoUser);
+        } else {
+          setError("Invalid username/email or password.");
+        }
       }
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password.");
-    } finally {
       setIsLoading(false);
-    }
+    }, 800);
   };
 
   const leftSideImageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=2043";

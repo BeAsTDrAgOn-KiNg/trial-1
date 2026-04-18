@@ -22,7 +22,7 @@ const NewMedicinePage: React.FC = () => {
     category: 'Antibiotics',
     customCategory: '',
     quantity: '',
-    minStockLevel: '',
+    min_stock_level: '',
     unit: 'Vials'
   });
 
@@ -52,8 +52,8 @@ const NewMedicinePage: React.FC = () => {
       quantity: parseInt(formData.quantity) || 0,
       unit: formData.unit,
       // Default to 10 if nothing is entered
-      minStockLevel: formData.minStockLevel === '' ? 10 : parseInt(formData.minStockLevel),
-      createdAt: new Date().toISOString()
+      min_stock_level: formData.min_stock_level === '' ? 10 : parseInt(formData.min_stock_level),
+      created_at: new Date().toISOString()
     };
 
     addMedicine(newMed);
@@ -161,8 +161,8 @@ const NewMedicinePage: React.FC = () => {
                 type="number"
                 placeholder="Defaults to 10"
                 className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#005F54]/10 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black"
-                value={formData.minStockLevel}
-                onChange={e => setFormData({...formData, minStockLevel: e.target.value})}
+                value={formData.min_stock_level}
+                onChange={e => setFormData({...formData, min_stock_level: e.target.value})}
               />
             </div>
           </div>

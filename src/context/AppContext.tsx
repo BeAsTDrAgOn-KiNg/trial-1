@@ -17,7 +17,19 @@ import {
   InventoryItem,
   UserProfile
 } from '../types';
-import { supabase } from '../lib/supabase';
+import { 
+  INITIAL_ANIMALS, 
+  INITIAL_CASES, 
+  INITIAL_WILDLIFE, 
+  INITIAL_DECLARATIONS, 
+  INITIAL_MEDS, 
+  INITIAL_DONATIONS, 
+  INITIAL_ADOPTION_APPLICATIONS, 
+  INITIAL_ABC_RECORDS, 
+  INITIAL_HOUSEKEEPING_SUPPLIES, 
+  INITIAL_MEDICINE_USAGE, 
+  INITIAL_STAFF 
+} from '../data/initialData';
 
 interface AppContextType {
   animals: Animal[];
@@ -79,272 +91,170 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [animals, setAnimals] = useState<Animal[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>(INITIAL_ANIMALS);
+  const [cases, setCases] = useState<Case[]>(INITIAL_CASES);
   const [clinicalEntries, setClinicalEntries] = useState<ClinicalEntry[]>([]);
-  const [wildlifeCases, setWildlifeCases] = useState<WildlifeCase[]>([]);
-  const [declarations, setDeclarations] = useState<Declaration[]>([]);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [donations, setDonations] = useState<Donation[]>([]);
+  const [wildlifeCases, setWildlifeCases] = useState<WildlifeCase[]>(INITIAL_WILDLIFE);
+  const [declarations, setDeclarations] = useState<Declaration[]>(INITIAL_DECLARATIONS);
+  const [medicines, setMedicines] = useState<Medicine[]>(INITIAL_MEDS);
+  const [donations, setDonations] = useState<Donation[]>(INITIAL_DONATIONS);
   const [adoptions, setAdoptions] = useState<Adoption[]>([]);
-  const [adoptionApplications, setAdoptionApplications] = useState<AdoptionApplication[]>([]);
-  const [abcRecords, setAbcRecords] = useState<ABCRecord[]>([]);
-  const [housekeepingSupplies, setHousekeepingSupplies] = useState<HousekeepingSupply[]>([]);
+  const [adoptionApplications, setAdoptionApplications] = useState<AdoptionApplication[]>(INITIAL_ADOPTION_APPLICATIONS);
+  const [abcRecords, setAbcRecords] = useState<ABCRecord[]>(INITIAL_ABC_RECORDS);
+  const [housekeepingSupplies, setHousekeepingSupplies] = useState<HousekeepingSupply[]>(INITIAL_HOUSEKEEPING_SUPPLIES);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [medicineUsage, setMedicineUsage] = useState<MedicineUsage[]>([]);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [medicineUsage, setMedicineUsage] = useState<MedicineUsage[]>(INITIAL_MEDICINE_USAGE);
+  const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Sync inventory items if needed (currently empty, can be populated from meds/supplies)
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      
-      try {
-        const [
-          { data: animalsData },
-          { data: casesData },
-          { data: clinicalData },
-          { data: wildlifeData },
-          { data: declarationsData },
-          { data: medicinesData },
-          { data: donationsData },
-          { data: applicationsData },
-          { data: abcData },
-          { data: housekeepingData },
-          { data: usageData },
-          { data: staffData }
-        ] = await Promise.all([
-          supabase.from('animals').select('*').order('createdAt', { ascending: false }),
-          supabase.from('cases').select('*').order('createdAt', { ascending: false }),
-          supabase.from('clinical_entries').select('*').order('createdAt', { ascending: false }),
-          supabase.from('wildlife_cases').select('*').order('createdAt', { ascending: false }),
-          supabase.from('declarations').select('*').order('createdAt', { ascending: false }),
-          supabase.from('medicines').select('*').order('name', { ascending: true }),
-          supabase.from('donations').select('*').order('createdAt', { ascending: false }),
-          supabase.from('adoption_applications').select('*').order('createdAt', { ascending: false }),
-          supabase.from('abc_records').select('*').order('createdAt', { ascending: false }),
-          supabase.from('housekeeping_supplies').select('*').order('name', { ascending: true }),
-          supabase.from('medicine_usage').select('*').order('createdAt', { ascending: false }),
-          supabase.from('staff').select('*').order('name', { ascending: true })
-        ]);
-
-        if (animalsData) setAnimals(animalsData);
-        if (casesData) setCases(casesData);
-        if (clinicalData) setClinicalEntries(clinicalData);
-        if (wildlifeData) setWildlifeCases(wildlifeData);
-        if (declarationsData) setDeclarations(declarationsData);
-        if (medicinesData) setMedicines(medicinesData);
-        if (donationsData) setDonations(donationsData);
-        if (applicationsData) setAdoptionApplications(applicationsData);
-        if (abcData) setAbcRecords(abcData);
-        if (housekeepingData) setHousekeepingSupplies(housekeepingData);
-        if (usageData) setMedicineUsage(usageData);
-        if (staffData) setStaff(staffData);
-      } catch (error) {
-        console.error('Error fetching data from Supabase:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    // Set up real-time subscriptions
-    const channels = [
-      supabase.channel('public:animals').on('postgres_changes', { event: '*', schema: 'public', table: 'animals' }, fetchData),
-      supabase.channel('public:cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, fetchData),
-      supabase.channel('public:clinical_entries').on('postgres_changes', { event: '*', schema: 'public', table: 'clinical_entries' }, fetchData),
-      supabase.channel('public:wildlife_cases').on('postgres_changes', { event: '*', schema: 'public', table: 'wildlife_cases' }, fetchData),
-      supabase.channel('public:medicines').on('postgres_changes', { event: '*', schema: 'public', table: 'medicines' }, fetchData),
-      supabase.channel('public:donations').on('postgres_changes', { event: '*', schema: 'public', table: 'donations' }, fetchData)
-    ];
-
-    channels.forEach(channel => channel.subscribe());
-
-    return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
-    };
+    // This is optional if items are standalone
   }, []);
 
-  const addAnimal = async (animal: Animal) => {
-    const { error } = await supabase.from('animals').insert([animal]);
-    if (error) console.error('Error adding animal:', error);
+  const addAnimal = (animal: Animal) => {
+    setAnimals(prev => [animal, ...prev]);
   };
 
-  const updateAnimal = async (animal: Animal) => {
-    const { error } = await supabase.from('animals').update(animal).eq('id', animal.id);
-    if (error) console.error('Error updating animal:', error);
+  const updateAnimal = (animal: Animal) => {
+    setAnimals(prev => prev.map(a => a.id === animal.id ? animal : a));
   };
   
-  const addCase = async (newCase: Case) => {
-    const { error } = await supabase.from('cases').insert([newCase]);
-    if (error) console.error('Error adding case:', error);
+  const addCase = (newCase: Case) => {
+    setCases(prev => [newCase, ...prev]);
   };
 
-  const updateCase = async (updatedCase: Case) => {
-    const { error } = await supabase.from('cases').update(updatedCase).eq('id', updatedCase.id);
-    if (error) console.error('Error updating case:', error);
+  const updateCase = (updatedCase: Case) => {
+    setCases(prev => prev.map(c => c.id === updatedCase.id ? updatedCase : c));
   };
   
-  const addClinicalEntry = async (entry: ClinicalEntry) => {
-    const { error } = await supabase.from('clinical_entries').insert([entry]);
-    if (error) console.error('Error adding clinical entry:', error);
+  const addClinicalEntry = (entry: ClinicalEntry) => {
+    setClinicalEntries(prev => [entry, ...prev]);
   };
 
-  const addWildlifeCase = async (newCase: WildlifeCase) => {
-    const { error } = await supabase.from('wildlife_cases').insert([newCase]);
-    if (error) console.error('Error adding wildlife case:', error);
+  const addWildlifeCase = (newCase: WildlifeCase) => {
+    setWildlifeCases(prev => [newCase, ...prev]);
   };
 
-  const addDeclaration = async (record: Declaration) => {
-    const { error } = await supabase.from('declarations').insert([record]);
-    if (error) console.error('Error adding declaration:', error);
+  const addDeclaration = (record: Declaration) => {
+    setDeclarations(prev => [record, ...prev]);
   };
 
-  const updateDeclaration = async (record: Declaration) => {
-    const { error } = await supabase.from('declarations').update(record).eq('id', record.id);
-    if (error) console.error('Error updating declaration:', error);
+  const updateDeclaration = (record: Declaration) => {
+    setDeclarations(prev => prev.map(d => d.id === record.id ? record : d));
   };
 
-  const addMedicine = async (newMed: Medicine) => {
-    const { error } = await supabase.from('medicines').insert([newMed]);
-    if (error) console.error('Error adding medicine:', error);
+  const addMedicine = (newMed: Medicine) => {
+    setMedicines(prev => [newMed, ...prev]);
   };
 
-  const updateMedicineQuantity = async (id: string, newQuantity: number) => {
-    const { error } = await supabase.from('medicines').update({ quantity: newQuantity }).eq('id', id);
-    if (error) console.error('Error updating medicine quantity:', error);
+  const updateMedicineQuantity = (id: string, newQuantity: number) => {
+    setMedicines(prev => prev.map(m => m.id === id ? { ...m, quantity: newQuantity } : m));
   };
 
-  const deleteMedicine = async (id: string) => {
-    const { error } = await supabase.from('medicines').delete().eq('id', id);
-    if (error) console.error('Error deleting medicine:', error);
+  const deleteMedicine = (id: string) => {
+    setMedicines(prev => prev.filter(m => m.id !== id));
   };
 
-  const deleteDonation = async (id: string) => {
-    const { error } = await supabase.from('donations').delete().eq('id', id);
-    if (error) console.error('Error deleting donation:', error);
+  const deleteDonation = (id: string) => {
+    setDonations(prev => prev.filter(d => d.id !== id));
   };
 
-  const deleteAdoption = async (id: string) => {
-    const { error } = await supabase.from('adoptions').delete().eq('id', id);
-    if (error) console.error('Error deleting adoption:', error);
+  const deleteAdoption = (id: string) => {
+    setAdoptions(prev => prev.filter(a => a.id !== id));
   };
 
-  const deleteAdoptionApplication = async (id: string) => {
-    const { error } = await supabase.from('adoption_applications').delete().eq('id', id);
-    if (error) console.error('Error deleting adoption application:', error);
+  const deleteAdoptionApplication = (id: string) => {
+    setAdoptionApplications(prev => prev.filter(a => a.id !== id));
   };
 
-  const deleteABCRecord = async (id: string) => {
-    const { error } = await supabase.from('abc_records').delete().eq('id', id);
-    if (error) console.error('Error deleting ABC record:', error);
+  const deleteABCRecord = (id: string) => {
+    setAbcRecords(prev => prev.filter(a => a.id !== id));
   };
 
-  const deleteHousekeepingSupply = async (id: string) => {
-    const { error } = await supabase.from('housekeeping_supplies').delete().eq('id', id);
-    if (error) console.error('Error deleting housekeeping supply:', error);
+  const deleteHousekeepingSupply = (id: string) => {
+    setHousekeepingSupplies(prev => prev.filter(h => h.id !== id));
   };
 
-  const deleteInventoryItem = async (id: string) => {
-    const { error } = await supabase.from('inventory_items').delete().eq('id', id);
-    if (error) console.error('Error deleting inventory item:', error);
+  const deleteInventoryItem = (id: string) => {
+    setInventoryItems(prev => prev.filter(i => i.id !== id));
   };
 
-  const deleteMedicineUsage = async (id: string) => {
-    const { error } = await supabase.from('medicine_usage').delete().eq('id', id);
-    if (error) console.error('Error deleting medicine usage:', error);
+  const deleteMedicineUsage = (id: string) => {
+    setMedicineUsage(prev => prev.filter(m => m.id !== id));
   };
 
-  const deleteStaff = async (id: string) => {
-    const { error } = await supabase.from('staff').delete().eq('id', id);
-    if (error) console.error('Error deleting staff member:', error);
+  const deleteStaff = (id: string) => {
+    setStaff(prev => prev.filter(s => s.id !== id));
   };
 
-  const deleteAnimal = async (id: string) => {
-    const { error } = await supabase.from('animals').delete().eq('id', id);
-    if (error) console.error('Error deleting animal:', error);
+  const deleteAnimal = (id: string) => {
+    setAnimals(prev => prev.filter(a => a.id !== id));
   };
 
-  const deleteCase = async (id: string) => {
-    const { error } = await supabase.from('cases').delete().eq('id', id);
-    if (error) console.error('Error deleting case:', error);
+  const deleteCase = (id: string) => {
+    setCases(prev => prev.filter(c => c.id !== id));
   };
 
-  const deleteClinicalEntry = async (id: string) => {
-    const { error } = await supabase.from('clinical_entries').delete().eq('id', id);
-    if (error) console.error('Error deleting clinical entry:', error);
+  const deleteClinicalEntry = (id: string) => {
+    setClinicalEntries(prev => prev.filter(c => c.id !== id));
   };
 
-  const deleteDeclaration = async (id: string) => {
-    const { error } = await supabase.from('declarations').delete().eq('id', id);
-    if (error) console.error('Error deleting declaration:', error);
+  const deleteDeclaration = (id: string) => {
+    setDeclarations(prev => prev.filter(d => d.id !== id));
   };
 
-  const addDonation = async (donation: Donation) => {
-    const { error } = await supabase.from('donations').insert([donation]);
-    if (error) console.error('Error adding donation:', error);
+  const addDonation = (donation: Donation) => {
+    setDonations(prev => [donation, ...prev]);
   };
 
-  const addAdoption = async (adoption: Adoption) => {
-    const { error } = await supabase.from('adoptions').insert([adoption]);
-    if (error) console.error('Error adding adoption:', error);
+  const addAdoption = (adoption: Adoption) => {
+    setAdoptions(prev => [adoption, ...prev]);
   };
 
-  const addAdoptionApplication = async (application: AdoptionApplication) => {
-    const { error } = await supabase.from('adoption_applications').insert([application]);
-    if (error) console.error('Error adding adoption application:', error);
+  const addAdoptionApplication = (application: AdoptionApplication) => {
+    setAdoptionApplications(prev => [application, ...prev]);
   };
 
-  const updateAdoptionApplication = async (application: AdoptionApplication) => {
-    const { error } = await supabase.from('adoption_applications').update(application).eq('id', application.id);
-    if (error) console.error('Error updating adoption application:', error);
+  const updateAdoptionApplication = (application: AdoptionApplication) => {
+    setAdoptionApplications(prev => prev.map(a => a.id === application.id ? application : a));
   };
 
-  const addABCRecord = async (record: ABCRecord) => {
-    const { error } = await supabase.from('abc_records').insert([record]);
-    if (error) console.error('Error adding ABC record:', error);
+  const addABCRecord = (record: ABCRecord) => {
+    setAbcRecords(prev => [record, ...prev]);
   };
 
-  const updateABCRecord = async (record: ABCRecord) => {
-    const { error } = await supabase.from('abc_records').update(record).eq('id', record.id);
-    if (error) console.error('Error updating ABC record:', error);
+  const updateABCRecord = (record: ABCRecord) => {
+    setAbcRecords(prev => prev.map(a => a.id === record.id ? record : a));
   };
 
-  const addHousekeepingSupply = async (supply: HousekeepingSupply) => {
-    const { error } = await supabase.from('housekeeping_supplies').insert([supply]);
-    if (error) console.error('Error adding housekeeping supply:', error);
+  const addHousekeepingSupply = (supply: HousekeepingSupply) => {
+    setHousekeepingSupplies(prev => [supply, ...prev]);
   };
 
-  const updateHousekeepingSupply = async (supply: HousekeepingSupply) => {
-    const { error } = await supabase.from('housekeeping_supplies').update(supply).eq('id', supply.id);
-    if (error) console.error('Error updating housekeeping supply:', error);
+  const updateHousekeepingSupply = (supply: HousekeepingSupply) => {
+    setHousekeepingSupplies(prev => prev.map(h => h.id === supply.id ? supply : h));
   };
 
-  const addInventoryItem = async (item: InventoryItem) => {
-    const { error } = await supabase.from('inventory_items').insert([item]);
-    if (error) console.error('Error adding inventory item:', error);
+  const addInventoryItem = (item: InventoryItem) => {
+    setInventoryItems(prev => [item, ...prev]);
   };
 
-  const updateInventoryItem = async (item: InventoryItem) => {
-    const { error } = await supabase.from('inventory_items').update(item).eq('id', item.id);
-    if (error) console.error('Error updating inventory item:', error);
+  const updateInventoryItem = (item: InventoryItem) => {
+    setInventoryItems(prev => prev.map(i => i.id === item.id ? item : i));
   };
 
-  const addMedicineUsage = async (usage: MedicineUsage) => {
-    const { error } = await supabase.from('medicine_usage').insert([usage]);
-    if (error) console.error('Error adding medicine usage:', error);
+  const addMedicineUsage = (usage: MedicineUsage) => {
+    setMedicineUsage(prev => [usage, ...prev]);
   };
 
-  const addStaff = async (member: StaffMember) => {
-    const { error } = await supabase.from('staff').insert([member]);
-    if (error) console.error('Error adding staff member:', error);
+  const addStaff = (member: StaffMember) => {
+    setStaff(prev => [member, ...prev]);
   };
 
-  const updateStaff = async (member: StaffMember) => {
-    const { error } = await supabase.from('staff').update(member).eq('id', member.id);
-    if (error) console.error('Error updating staff member:', error);
+  const updateStaff = (member: StaffMember) => {
+    setStaff(prev => prev.map(s => s.id === member.id ? member : s));
   };
 
   return (

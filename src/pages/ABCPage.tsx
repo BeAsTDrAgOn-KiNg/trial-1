@@ -30,20 +30,20 @@ const ABCPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    animalId: '',
+    animal_id: '',
     sterilized: true,
-    vaccinationDone: true,
-    surgeryDate: new Date().toISOString().split('T')[0],
+    vaccination_done: true,
+    surgery_date: new Date().toISOString().split('T')[0],
     remarks: ''
   });
 
   const handleRegisterClick = () => {
     setEditingId(null);
     setFormData({
-      animalId: animals[0]?.id || '',
+      animal_id: animals[0]?.id || '',
       sterilized: true,
-      vaccinationDone: true,
-      surgeryDate: new Date().toISOString().split('T')[0],
+      vaccination_done: true,
+      surgery_date: new Date().toISOString().split('T')[0],
       remarks: ''
     });
     setIsModalOpen(true);
@@ -52,10 +52,10 @@ const ABCPage: React.FC = () => {
   const handleEditClick = (record: ABCRecord) => {
     setEditingId(record.id);
     setFormData({
-      animalId: record.animalId || '',
+      animal_id: record.animal_id || '',
       sterilized: record.sterilized,
-      vaccinationDone: record.vaccinationDone,
-      surgeryDate: record.surgeryDate,
+      vaccination_done: record.vaccination_done,
+      surgery_date: record.surgery_date,
       remarks: record.remarks || ''
     });
     setIsModalOpen(true);
@@ -64,7 +64,7 @@ const ABCPage: React.FC = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.animalId) {
+    if (!formData.animal_id) {
       alert("Please select an Animal.");
       return;
     }
@@ -76,7 +76,7 @@ const ABCPage: React.FC = () => {
       const newRecord: ABCRecord = {
         id: `abc-${Date.now()}`,
         ...formData,
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString()
       };
       addABCRecord(newRecord);
       alert("New entry successfully saved.");
@@ -90,7 +90,7 @@ const ABCPage: React.FC = () => {
     const monthly: Record<string, number> = {};
     const yearly: Record<string, number> = {};
     abcRecords.forEach(r => {
-      const date = new Date(r.surgeryDate);
+      const date = new Date(r.surgery_date);
       const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
       const year = date.getFullYear().toString();
       monthly[monthYear] = (monthly[monthYear] || 0) + 1;
@@ -101,7 +101,7 @@ const ABCPage: React.FC = () => {
 
   const filteredRecords = useMemo(() => {
     return abcRecords.filter(r => {
-      const animal = animals.find(a => a.id === r.animalId);
+      const animal = animals.find(a => a.id === r.animal_id);
       const animalName = animal ? `${animal.name} (${animal.species})` : 'Unknown Animal';
       const matchesSearch = animalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (r.remarks || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,7 +204,7 @@ const ABCPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filteredRecords.map((r) => {
-                    const animal = animals.find(a => a.id === r.animalId);
+                    const animal = animals.find(a => a.id === r.animal_id);
                     return (
                       <tr key={r.id} className="hover:bg-emerald-50/5 transition-colors group">
                         <td className="px-10 py-6">
@@ -218,15 +218,15 @@ const ABCPage: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-10 py-6 text-sm font-bold text-slate-500 text-center">{r.surgeryDate}</td>
+                        <td className="px-10 py-6 text-sm font-bold text-slate-500 text-center">{r.surgery_date}</td>
                         <td className="px-10 py-6 text-center">
                           <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${r.sterilized ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
                             {r.sterilized ? 'Yes' : 'No'}
                           </span>
                         </td>
                         <td className="px-10 py-6 text-center">
-                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${r.vaccinationDone ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
-                            {r.vaccinationDone ? 'Yes' : 'No'}
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${r.vaccination_done ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
+                            {r.vaccination_done ? 'Yes' : 'No'}
                           </span>
                         </td>
                         <td className="px-10 py-6">
@@ -338,8 +338,8 @@ const ABCPage: React.FC = () => {
                   <div className="relative">
                     <select 
                       className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] appearance-none cursor-pointer transition-all"
-                      value={formData.animalId}
-                      onChange={e => setFormData({...formData, animalId: e.target.value})}
+                      value={formData.animal_id}
+                      onChange={e => setFormData({...formData, animal_id: e.target.value})}
                     >
                       {animals.map(a => (
                         <option key={a.id} value={a.id}>{a.name} ({a.species})</option>
@@ -358,8 +358,8 @@ const ABCPage: React.FC = () => {
                         type="date"
                         required
                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
-                        value={formData.surgeryDate}
-                        onChange={e => setFormData({...formData, surgeryDate: e.target.value})}
+                        value={formData.surgery_date}
+                        onChange={e => setFormData({...formData, surgery_date: e.target.value})}
                       />
                     </div>
                   </div>
@@ -377,8 +377,8 @@ const ABCPage: React.FC = () => {
                       <input 
                         type="checkbox" 
                         className="w-5 h-5 rounded border-slate-200 text-[#005F54] focus:ring-[#005F54]/10"
-                        checked={formData.vaccinationDone}
-                        onChange={e => setFormData({...formData, vaccinationDone: e.target.checked})}
+                        checked={formData.vaccination_done}
+                        onChange={e => setFormData({...formData, vaccination_done: e.target.checked})}
                       />
                       <span className="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Vaccinated</span>
                     </label>

@@ -48,15 +48,15 @@ const AdoptionsPage: React.FC = () => {
   const [editData, setEditData] = useState<AdoptionApplication | null>(null);
 
   const [formData, setFormData] = useState({
-    appNumber: `2024-${adoptionApplications.length + 233}`,
-    adopterName: '',
-    adopterAge: '',
-    adopterGender: 'Male',
+    app_number: `2024-${adoptionApplications.length + 233}`,
+    adopter_name: '',
+    adopter_age: '',
+    adopter_gender: 'Male',
     phone: '',
     email: '',
-    animalType: 'Dog',
-    targetGender: 'Male',
-    targetColor: '',
+    animal_type: 'Dog',
+    target_gender: 'Male',
+    target_color: '',
     reason: '',
     address: '',
     description: '',
@@ -70,16 +70,16 @@ const AdoptionsPage: React.FC = () => {
       id: `APP-${Date.now().toString().slice(-4)}`,
       ...formData,
       status: 'In Review',
-      createdAt: new Date().toISOString()
+      created_at: new Date().toISOString()
     };
     addAdoptionApplication(newRecord);
     alert("Adoption Application successfully registered.");
     setView('summary');
     setFormStep(1);
     setFormData({
-      appNumber: `2024-${adoptionApplications.length + 234}`,
-      adopterName: '', adopterAge: '', adopterGender: 'Male', phone: '', email: '',
-      animalType: 'Dog', targetGender: 'Male', targetColor: '',
+      app_number: `2024-${adoptionApplications.length + 234}`,
+      adopter_name: '', adopter_age: '', adopter_gender: 'Male', phone: '', email: '',
+      animal_type: 'Dog', target_gender: 'Male', target_color: '',
       reason: '', address: '', description: '', 
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
@@ -89,8 +89,8 @@ const AdoptionsPage: React.FC = () => {
 
   const filteredRecords = useMemo(() => {
     return adoptionApplications.filter(r => {
-      return r.adopterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             r.animalType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      return r.adopter_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             r.animal_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
              r.id.toLowerCase().includes(searchTerm.toLowerCase());
     });
   }, [adoptionApplications, searchTerm]);
@@ -137,24 +137,24 @@ const AdoptionsPage: React.FC = () => {
         </div>
         <div className="text-right w-full md:w-auto">
           <div className="bg-slate-900 text-white px-6 py-2 text-xs font-black uppercase tracking-[0.2em] rounded-sm shadow-md mb-2 inline-block">ADOPTION FORM</div>
-          <div className="flex items-center justify-end gap-2 text-sm font-bold text-slate-800">No.<span className="text-rose-600 font-black underline underline-offset-4 decoration-slate-300"> {data.appNumber}</span></div>
+          <div className="flex items-center justify-end gap-2 text-sm font-bold text-slate-800">No.<span className="text-rose-600 font-black underline underline-offset-4 decoration-slate-300"> {data.app_number}</span></div>
         </div>
       </div>
 
       <div className="space-y-8">
-        <UnderlineInput disabled={isPreview} label="Your Name" value={data.adopterName} onChange={(e: any) => onDataChange ? onDataChange({...data, adopterName: e.target.value}) : setFormData({...formData, adopterName: e.target.value})} placeholder="Full Name" />
+        <UnderlineInput disabled={isPreview} label="Your Name" value={data.adopter_name} onChange={(e: any) => onDataChange ? onDataChange({...data, adopter_name: e.target.value}) : setFormData({...formData, adopter_name: e.target.value})} placeholder="Full Name" />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          <UnderlineInput disabled={isPreview} label="Age" value={data.adopterAge} onChange={(e: any) => onDataChange ? onDataChange({...data, adopterAge: e.target.value}) : setFormData({...formData, adopterAge: e.target.value})} placeholder="Years" />
+          <UnderlineInput disabled={isPreview} label="Age" value={data.adopter_age} onChange={(e: any) => onDataChange ? onDataChange({...data, adopter_age: e.target.value}) : setFormData({...formData, adopter_age: e.target.value})} placeholder="Years" />
           <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
             GENDER : 
             <label className="flex items-center gap-1.5 cursor-pointer">
-              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, adopterGender: 'Male'}) : setFormData({...formData, adopterGender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+              <input disabled={isPreview} type="radio" checked={data.adopter_gender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, adopter_gender: 'Male'}) : setFormData({...formData, adopter_gender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
               <span>Male</span>
             </label>
             <span>/</span>
             <label className="flex items-center gap-1.5 cursor-pointer">
-              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, adopterGender: 'Female'}) : setFormData({...formData, adopterGender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+              <input disabled={isPreview} type="radio" checked={data.adopter_gender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, adopter_gender: 'Female'}) : setFormData({...formData, adopter_gender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
               <span>Female</span>
             </label>
           </div>
@@ -169,25 +169,25 @@ const AdoptionsPage: React.FC = () => {
 
         <div className="pt-6 space-y-4">
           <p className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">I want to adopt a dog / cat / pup / kitten / other :</p>
-          <input disabled={isPreview} className="w-full bg-transparent border-b border-slate-400 focus:outline-none py-1 text-[#1e40af] font-bold italic" value={data.animalType} onChange={e => onDataChange ? onDataChange({...data, animalType: e.target.value}) : setFormData({...formData, animalType: e.target.value})} placeholder="Animal type" />
+          <input disabled={isPreview} className="w-full bg-transparent border-b border-slate-400 focus:outline-none py-1 text-[#1e40af] font-bold italic" value={data.animal_type} onChange={e => onDataChange ? onDataChange({...data, animal_type: e.target.value}) : setFormData({...formData, animal_type: e.target.value})} placeholder="Animal type" />
         </div>
 
         <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
           GENDER OF ANIMAL : 
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, targetGender: 'Male'}) : setFormData({...formData, targetGender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+            <input disabled={isPreview} type="radio" checked={data.target_gender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, target_gender: 'Male'}) : setFormData({...formData, target_gender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
             <span>Male</span>
           </label>
           <span>/</span>
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, targetGender: 'Female'}) : setFormData({...formData, targetGender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+            <input disabled={isPreview} type="radio" checked={data.target_gender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, target_gender: 'Female'}) : setFormData({...formData, target_gender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
             <span>Female</span>
           </label>
         </div>
 
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
           <span className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">Colour preference:</span>
-          <input disabled={isPreview} className="flex-1 bg-transparent border-b border-slate-400 text-[#1e40af] font-bold w-full md:w-auto mt-2 md:mt-0" value={data.targetColor} onChange={e => onDataChange ? onDataChange({...data, targetColor: e.target.value}) : setFormData({...formData, targetColor: e.target.value})} placeholder="Color pattern" />
+          <input disabled={isPreview} className="flex-1 bg-transparent border-b border-slate-400 text-[#1e40af] font-bold w-full md:w-auto mt-2 md:mt-0" value={data.target_color} onChange={e => onDataChange ? onDataChange({...data, target_color: e.target.value}) : setFormData({...formData, target_color: e.target.value})} placeholder="Color pattern" />
         </div>
 
         <UnderlineInput disabled={isPreview} label="Why do you want to adopt?" value={data.reason} onChange={(e: any) => onDataChange ? onDataChange({...data, reason: e.target.value}) : setFormData({...formData, reason: e.target.value})} placeholder="Reason" />
@@ -219,7 +219,7 @@ const AdoptionsPage: React.FC = () => {
 
       <div className="space-y-10 leading-[3]">
         <div className="text-sm font-bold text-slate-700 leading-loose text-justify">
-          I, Mr. / Mrs. / Ms. <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[250px] italic leading-tight">{data.adopterName || "...................................................."}</span> residing at <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[300px] italic leading-tight">{data.address || "...................................................."}</span> Tel/Mob: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[150px] italic leading-tight">{data.phone || "................................"}</span> Email: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[200px] italic leading-tight">{data.email || "................................"}</span> declare as follows:
+          I, Mr. / Mrs. / Ms. <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[250px] italic leading-tight">{data.adopter_name || "...................................................."}</span> residing at <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[300px] italic leading-tight">{data.address || "...................................................."}</span> Tel/Mob: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[150px] italic leading-tight">{data.phone || "................................"}</span> Email: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[200px] italic leading-tight">{data.email || "................................"}</span> declare as follows:
         </div>
 
         <div className="space-y-6 text-sm font-bold text-slate-600 text-justify bg-slate-50/30 p-4 md:p-8 rounded-lg border border-slate-100 leading-relaxed">
@@ -342,16 +342,16 @@ const AdoptionsPage: React.FC = () => {
                         <td className="px-10 py-7">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-[10px] font-black uppercase shadow-lg">
-                              {(r.adopterName || '?').charAt(0)}
+                              {(r.adopter_name || '?').charAt(0)}
                             </div>
                             <div>
-                               <p className="text-base font-black text-slate-800 tracking-tight leading-none mb-1">{r.adopterName}</p>
+                               <p className="text-base font-black text-slate-800 tracking-tight leading-none mb-1">{r.adopter_name}</p>
                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: {r.id}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-10 py-7">
-                           <span className="px-3 py-1 bg-[#005F54] text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{r.animalType}</span>
+                           <span className="px-3 py-1 bg-[#005F54] text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{r.animal_type}</span>
                         </td>
                         <td className="px-10 py-7">
                           <span className="text-sm font-bold text-slate-600 flex items-center gap-1.5"><Calendar size={14} className="text-[#005F54]" /> {r.date}</span>

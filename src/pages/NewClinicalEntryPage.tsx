@@ -30,7 +30,7 @@ const NewClinicalEntryPage: React.FC = () => {
     symptoms: '',
     diagnosis: '',
     treatment: '',
-    doctorName: 'Dr. Anita Desai'
+    doctor_name: 'Dr. Anita Desai'
   });
 
   const [entry, setEntry] = useState(createInitialEntry());
@@ -56,13 +56,13 @@ const NewClinicalEntryPage: React.FC = () => {
 
       const newEntry: ClinicalEntry = {
         id: `ce-${Date.now()}`,
-        caseId: targetCase.id,
+        case_id: targetCase.id,
         date: entry.date,
         symptoms: entry.symptoms,
         diagnosis: entry.diagnosis,
         treatment: entry.treatment,
-        doctorName: entry.doctorName,
-        createdAt: new Date().toISOString()
+        doctor_name: entry.doctor_name,
+        created_at: new Date().toISOString()
       };
 
       addClinicalEntry(newEntry);
@@ -97,7 +97,7 @@ const NewClinicalEntryPage: React.FC = () => {
         </button>
         <div>
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">Add Treatments</h1>
-          <p className="text-slate-500 font-medium">Add medicines given to {targetCase.caseNumber}</p>
+          <p className="text-slate-500 font-medium">Add medicines given to {targetCase.id.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ const NewClinicalEntryPage: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Case</p>
-              <h3 className="text-xl font-black tracking-tight">{targetCase.caseNumber} • {targetCase.animalType}</h3>
+              <h3 className="text-xl font-black tracking-tight">{targetCase.id.slice(0, 8).toUpperCase()} • {targetCase.title}</h3>
             </div>
           </div>
           <div className="text-right hidden sm:block">
@@ -150,8 +150,8 @@ const NewClinicalEntryPage: React.FC = () => {
                   type="text"
                   required
                   className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:bg-white focus:outline-none transition-all text-sm font-bold text-black shadow-inner"
-                  value={entry.doctorName}
-                  onChange={e => handleUpdateEntry('doctorName', e.target.value)}
+                  value={entry.doctor_name}
+                  onChange={e => handleUpdateEntry('doctor_name', e.target.value)}
                 />
               </div>
             </div>

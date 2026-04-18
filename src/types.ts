@@ -3,15 +3,15 @@ export type Role = 'Admin' | 'Doctor' | 'Data Entry';
 
 export interface UserProfile {
   id: string;
-  fullName: string;
+  full_name: string;
   role: string;
   phone?: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface User {
   id: string;
-  name: string;
+  full_name: string;
   email: string;
   phone?: string;
   role: Role;
@@ -24,11 +24,11 @@ export interface Animal {
   breed?: string;
   age?: number;
   gender?: string;
-  healthStatus?: string;
+  health_status?: string;
   location?: string;
-  imageUrl?: string;
+  image_url?: string;
   status: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export enum CaseStatus {
@@ -48,91 +48,91 @@ export interface Case {
   description: string;
   location: string;
   status: CaseStatus | string;
-  reportedBy?: string; // user_id
-  imageUrl?: string;
-  createdAt?: string;
+  reported_by?: string; // user_id
+  image_url?: string;
+  created_at?: string;
 }
 
 export interface ClinicalEntry {
   id: string;
-  caseId: string;
+  case_id: string;
   date: string;
   symptoms?: string;
   diagnosis: string;
   treatment: string;
-  doctorName: string;
-  createdAt?: string;
+  doctor_name: string;
+  created_at?: string;
 }
 
 export interface WildlifeCase {
   id: string;
-  caseNumber: string;
-  dateTime: string;
+  case_number: string;
+  date_time: string;
   animal: string;
   species: string;
   schedule: string;
   location: string;
   status: string;
-  complainantName: string;
-  complainantPhone: string;
-  forestDeptContact?: string;
-  releasePlan?: string;
-  isReadyForRelease: boolean;
-  sentFor?: string;
+  complainant_name: string;
+  complainant_phone: string;
+  forest_dept_contact?: string;
+  release_plan?: string;
+  is_ready_for_release: boolean;
+  sent_for?: string;
   destination?: string;
   correspondence?: string;
   signature?: string;
-  reportedDate?: string;
-  resolvedDate?: string;
-  imageUrl?: string;
-  createdAt?: string;
+  reported_date?: string;
+  resolved_date?: string;
+  image_url?: string;
+  created_at?: string;
 }
 
 export interface ABCRecord {
   id: string;
-  animalId: string;
+  animal_id: string;
   sterilized: boolean;
-  vaccinationDone: boolean;
-  surgeryDate: string;
+  vaccination_done: boolean;
+  surgery_date: string;
   remarks?: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface AdoptionApplication {
   id: string;
-  appNumber: string;
-  adopterName: string;
+  app_number: string;
+  adopter_name: string;
   address: string;
   phone: string;
   email: string;
-  animalType: string;
-  targetGender: string;
-  targetColor: string;
+  animal_type: string;
+  target_gender: string;
+  target_color: string;
   status: string;
   date: string;
   time: string;
   description?: string;
-  idProof?: string;
-  houseType?: string;
-  hasOtherPets?: string;
-  vetName?: string;
+  id_proof?: string;
+  house_type?: string;
+  has_other_pets?: string;
+  vet_name?: string;
   reason?: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface Adoption {
   id: string;
-  animalId: string;
-  userId: string;
+  animal_id: string;
+  user_id: string;
   status: string;
   notes?: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface Declaration {
   id: string;
-  formNo: string;
-  declarerName: string;
+  form_no: string;
+  declarer_name: string;
   address: string;
   phone: string;
   email: string;
@@ -141,25 +141,25 @@ export interface Declaration {
   age: string;
   description: string;
   date: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface Donation {
   id: string;
-  donorName: string;
+  donor_name: string;
   amount: number;
   message?: string;
-  paymentId?: string;
-  createdAt?: string;
+  payment_id?: string;
+  created_at?: string;
 }
 
 export interface HousekeepingSupply {
   id: string;
   name: string;
   quantity: number;
-  minStockLevel: number;
+  min_stock_level: number;
   unit: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface InventoryItem {
@@ -168,9 +168,9 @@ export interface InventoryItem {
   category: string;
   quantity: number;
   unit: string;
-  minStockLevel?: number;
-  lastRestocked?: string;
-  createdAt?: string;
+  min_stock_level?: number;
+  last_restocked?: string;
+  created_at?: string;
 }
 
 export interface Medicine {
@@ -179,21 +179,21 @@ export interface Medicine {
   category: string;
   quantity: number;
   unit: string;
-  expiryDate?: string;
-  minStockLevel: number;
-  createdAt?: string;
+  expiry_date?: string;
+  min_stock_level: number;
+  created_at?: string;
 }
 
 export interface MedicineUsage {
   id: string;
-  medicineId: string;
-  medicineName: string;
+  medicine_id: string;
+  medicine_name: string;
   quantity: string;
-  takenBy: string;
-  dateTime: string;
+  taken_by: string;
+  date_time: string;
   purpose: string;
   ward?: string;
-  createdAt?: string;
+  created_at?: string;
 }
 
 export interface StaffMember {
@@ -201,6 +201,12 @@ export interface StaffMember {
   name: string;
   role: string;
   phone: string;
-  joinedDate: string;
-  createdAt?: string;
+  joined_date: string;
+  bank_full_name?: string;
+  bank_name?: string;
+  bank_branch?: string;
+  ifsc_code?: string;
+  account_number?: string;
+  salary?: number;
+  created_at?: string;
 }

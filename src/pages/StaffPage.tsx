@@ -45,7 +45,13 @@ const StaffPage: React.FC = () => {
     name: '',
     role: 'Staff',
     phone: '',
-    joinedDate: new Date().toISOString().split('T')[0]
+    joined_date: new Date().toISOString().split('T')[0],
+    bank_full_name: '',
+    bank_name: '',
+    bank_branch: '',
+    ifsc_code: '',
+    account_number: '',
+    salary: ''
   });
 
   const designations = [
@@ -76,7 +82,13 @@ const StaffPage: React.FC = () => {
       name: member.name,
       role: member.role,
       phone: member.phone,
-      joinedDate: member.joinedDate
+      joined_date: member.joined_date,
+      bank_full_name: member.bank_full_name || '',
+      bank_name: member.bank_name || '',
+      bank_branch: member.bank_branch || '',
+      ifsc_code: member.ifsc_code || '',
+      account_number: member.account_number || '',
+      salary: member.salary?.toString() || ''
     });
     setIsDetailOpen(false);
     setIsModalOpen(true);
@@ -108,7 +120,7 @@ const StaffPage: React.FC = () => {
       const newStaff: StaffMember = {
         id: `s-${Date.now()}`,
         ...formData,
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString()
       };
       addStaff(newStaff);
     }
@@ -121,7 +133,13 @@ const StaffPage: React.FC = () => {
       name: '',
       role: 'Staff',
       phone: '',
-      joinedDate: new Date().toISOString().split('T')[0]
+      joined_date: new Date().toISOString().split('T')[0],
+      bank_full_name: '',
+      bank_name: '',
+      bank_branch: '',
+      ifsc_code: '',
+      account_number: '',
+      salary: ''
     });
   };
 
@@ -261,7 +279,7 @@ const StaffPage: React.FC = () => {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Role & History</p>
                     <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
                       <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">{selectedStaff.role}</p>
-                      <p className="text-[10px] text-emerald-600 font-bold mt-2">Joined: {selectedStaff.joinedDate || 'N/A'}</p>
+                      <p className="text-[10px] text-emerald-600 font-bold mt-2">Joined: {selectedStaff.joined_date || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -372,7 +390,7 @@ const StaffPage: React.FC = () => {
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1">Date of Joining</label>
-                      <input type="date" className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.joinedDate} onChange={e => setFormData({...formData, joinedDate: e.target.value})} />
+                      <input type="date" className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.joined_date} onChange={e => setFormData({...formData, joined_date: e.target.value})} />
                     </div>
 
                     <div className="space-y-2">
@@ -405,23 +423,23 @@ const StaffPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name as per Bank</label>
-                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bankFullName} onChange={e => setFormData({...formData, bankFullName: e.target.value})} placeholder="Same as bank records" />
+                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bank_full_name} onChange={e => setFormData({...formData, bank_full_name: e.target.value})} placeholder="Same as bank records" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Bank Name</label>
-                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} placeholder="e.g. SBI, HDFC" />
+                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} placeholder="e.g. SBI, HDFC" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Bank Branch</label>
-                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bankBranch} onChange={e => setFormData({...formData, bankBranch: e.target.value})} placeholder="Mysuru Main" />
+                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.bank_branch} onChange={e => setFormData({...formData, bank_branch: e.target.value})} placeholder="Mysuru Main" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">IFSC Code</label>
-                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all uppercase" value={formData.ifscCode} onChange={e => setFormData({...formData, ifscCode: e.target.value.toUpperCase()})} placeholder="SBIN0001234" />
+                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all uppercase" value={formData.ifsc_code} onChange={e => setFormData({...formData, ifsc_code: e.target.value.toUpperCase()})} placeholder="SBIN0001234" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Account Number</label>
-                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} placeholder="0000 0000 0000" />
+                        <input className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.account_number} onChange={e => setFormData({...formData, account_number: e.target.value})} placeholder="0000 0000 0000" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Offered Monthly Salary (₹)</label>
