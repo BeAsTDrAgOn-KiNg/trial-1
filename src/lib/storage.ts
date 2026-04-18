@@ -1,19 +1,26 @@
 /**
- * Simulates uploading a file by returning a local object URL.
+ * Uploads a file to the server and returns the URL.
  * @param file The file to upload
- * @param bucket The name of the storage bucket (unused in simulation)
- * @param path The path within the bucket (unused in simulation)
  */
-export const uploadFile = async (file: File, bucket: string, path: string): Promise<string | null> => {
+export const uploadFile = async (file: File): Promise<string | null> => {
   try {
-    // Simulating a network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In a real local-only app, we use createObjectURL. 
-    // Note: These URLs are revoked when the page is closed/refreshed.
-    return URL.createObjectURL(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Upload failed');
+    }
+
+    const data = await response.json();
+    return data.url;
   } catch (error) {
-    console.error('Unexpected error during sim-upload:', error);
+    console.error('Error during file upload:', error);
     return null;
   }
 };

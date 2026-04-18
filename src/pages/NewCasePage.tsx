@@ -178,7 +178,7 @@ const NewCasePage: React.FC = () => {
     if (selectedImage && selectedImage.startsWith('data:')) {
       try {
         const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
-        const uploadedUrl = await uploadFile(file, 'animal-records', `cases/${file.name}`);
+        const uploadedUrl = await uploadFile(file);
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl;
         }
