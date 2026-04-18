@@ -22,8 +22,9 @@ import { uploadFile, base64ToFile } from '../lib/storage';
 const EditCasePage: React.FC = () => {
   const { caseId } = useParams();
   const navigate = useNavigate();
-  const { cases, updateCase, isLoading } = useAppContext();
+  const { updateCase, isLoading: isGlobalLoading } = useAppContext();
   const [loading, setLoading] = useState(true);
+  const [targetCase, setTargetCase] = useState<Case | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -43,35 +44,47 @@ const EditCasePage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (isLoading) return;
-    const foundCase = cases.find(c => c.id === caseId);
-    if (foundCase) {
-      // Try to parse info from title and description
-      const titleParts = foundCase.title.split(' - ');
-      const caseNumber = titleParts[1] || '';
-      const animalTypeRaw = titleParts[0]?.split(' ')[0] || 'Dog';
-      
-      setFormData({
-        caseNumber: caseNumber,
-        dateTime: foundCase.createdAt || '',
-        location: foundCase.location,
-        compName: '', // These are now buried in description
-        compPhone: '',
-        compAddress: '',
-        animalType: ['Dog', 'Cat', 'Cow'].includes(animalTypeRaw) ? animalTypeRaw : 'Other',
-        customAnimalType: ['Dog', 'Cat', 'Cow'].includes(animalTypeRaw) ? '' : animalTypeRaw,
-        age: 'Unknown',
-        gender: 'Male',
-        description: foundCase.description,
-        status: foundCase.status as CaseStatus
-      });
-      setSelectedImage(foundCase.imageUrl || null);
-      setLoading(false);
-    } else {
-      alert("Case not found.");
-      navigate('/cases');
-    }
-  }, [caseId, navigate, cases, isLoading]);
+    const fetchCase = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/cases/${caseId}`);
+        const foundCase = await res.json();
+        
+        if (foundCase && !foundCase.error) {
+          setTargetCase(foundCase);
+          const titleParts = foundCase.title.split(' - ');
+          const caseNumber = titleParts[1] || '';
+          const animalTypeRaw = titleParts[0]?.split(' ')[0] || 'Dog';
+          
+          setFormData({
+            caseNumber: caseNumber,
+            dateTime: foundCase.createdAt || '',
+            location: foundCase.location,
+            compName: foundCase.reporter?.name || '', 
+            compPhone: foundCase.reporter?.phone || '',
+            compAddress: foundCase.reporter?.address || '',
+            animalType: ['Dog', 'Cat', 'Cow'].includes(animalTypeRaw) ? animalTypeRaw : 'Other',
+            customAnimalType: ['Dog', 'Cat', 'Cow'].includes(animalTypeRaw) ? '' : animalTypeRaw,
+            age: 'Unknown',
+            gender: 'Male',
+            description: foundCase.description,
+            status: foundCase.status as CaseStatus
+          });
+          setSelectedImage(foundCase.imageUrl || null);
+        } else {
+          alert("Case not found.");
+          navigate('/cases');
+        }
+      } catch (error) {
+        console.error('Fetch case failed', error);
+        navigate('/cases');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (caseId) fetchCase();
+  }, [caseId, navigate]);
 
   const handleUpdate = async () => {
     if (!formData.caseNumber.trim()) {
@@ -85,7 +98,6 @@ const EditCasePage: React.FC = () => {
     }
 
     const finalAnimalType = formData.animalType === 'Other' ? (formData.customAnimalType || 'Other') : formData.animalType;
-    const targetCase = cases.find(c => c.id === caseId);
 
     if (targetCase) {
       let finalImageUrl = selectedImage || undefined;
@@ -129,7 +141,7 @@ const EditCasePage: React.FC = () => {
     }
   };
 
-  if (isLoading || loading) {
+  if (isGlobalLoading || loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>

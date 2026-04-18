@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -17,19 +17,32 @@ import { CaseStatus } from '../types';
 
 const CensusReportPage: React.FC = () => {
   const navigate = useNavigate();
-  const { cases, isLoading } = useAppContext();
+  const { isLoading: isGlobalLoading } = useAppContext();
+  const [reportCases, setReportCases] = useState<any[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
   const [activeTab, setActiveTab] = useState<'Permanent' | 'Released'>('Permanent');
   const [searchTerm, setSearchTerm] = useState('');
 
+  useEffect(() => {
+    setIsFetching(true);
+    fetch('/api/cases/export')
+      .then(res => res.json())
+      .then(data => {
+        setReportCases(data);
+        setIsFetching(false);
+      })
+      .catch(() => setIsFetching(false));
+  }, []);
+
   const censusData = useMemo(() => {
-    const released = cases.filter(c => c.status === CaseStatus.RELEASED);
-    const permanent = cases.filter(c => c.status === CaseStatus.PERMANENT);
+    const released = reportCases.filter(c => c.status === CaseStatus.RELEASED);
+    const permanent = reportCases.filter(c => c.status === CaseStatus.PERMANENT);
     return {
       released,
       permanent,
       total: released.length + permanent.length
     };
-  }, [cases]);
+  }, [reportCases]);
 
   const filteredList = useMemo(() => {
     const base = activeTab === 'Permanent' ? censusData.permanent : censusData.released;
@@ -61,7 +74,7 @@ const CensusReportPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  if (isLoading) {
+  if (isGlobalLoading || isFetching) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>

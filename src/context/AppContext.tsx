@@ -104,12 +104,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const fetchData = async () => {
       try {
         const [
-          animalsRes, casesRes, wildlifeRes, staffRes, medsRes, 
+          animalsRes, wildlifeRes, staffRes, medsRes, 
           houseRes, donationsRes, appsRes, entriesRes, abcRes, 
           declRes, usageRes, itemsRes, adoptionsRes, usersRes
         ] = await Promise.all([
           fetch('/api/animals'),
-          fetch('/api/cases'),
+          // fetch('/api/cases'), // Remove global fetch to save bandwidth
           fetch('/api/wildlife'),
           fetch('/api/staff'),
           fetch('/api/inventory/medicines'),
@@ -126,7 +126,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ]);
 
         if (animalsRes.ok) setAnimals(await animalsRes.json());
-        if (casesRes.ok) setCases(await casesRes.json());
+        // if (casesRes.ok) setCases(await casesRes.json());
         if (wildlifeRes.ok) setWildlifeCases(await wildlifeRes.json());
         if (staffRes.ok) setStaff(await staffRes.json());
         if (medsRes.ok) setMedicines(await medsRes.json());

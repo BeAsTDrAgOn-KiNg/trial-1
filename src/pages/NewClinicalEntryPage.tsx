@@ -23,8 +23,9 @@ import { Case, ClinicalEntry } from '../types';
 const NewClinicalEntryPage: React.FC = () => {
   const { caseId } = useParams();
   const navigate = useNavigate();
-  const { cases, medicines, addClinicalEntry, isLoading } = useAppContext();
+  const { medicines, addClinicalEntry, isLoading: isGlobalLoading } = useAppContext();
   const [targetCase, setTargetCase] = useState<Case | null>(null);
+  const [isCaseLoading, setIsCaseLoading] = useState(true);
 
   const createInitialEntry = () => ({
     date: new Date().toISOString().split('T')[0],
@@ -38,11 +39,27 @@ const NewClinicalEntryPage: React.FC = () => {
   const [selectedMeds, setSelectedMeds] = useState<{ id: string, quantity: number }[]>([]);
 
   useEffect(() => {
-    const found = cases.find(c => c.id === caseId);
-    if (found) {
-      setTargetCase(found);
-    }
-  }, [caseId, cases]);
+    const fetchCase = async () => {
+      setIsCaseLoading(true);
+      try {
+        const res = await fetch(`/api/cases/${caseId}`);
+        const found = await res.json();
+        if (found && !found.error) {
+          setTargetCase(found);
+        } else {
+          alert("Case not found.");
+          navigate('/cases');
+        }
+      } catch (error) {
+        console.error('Fetch case failed', error);
+        navigate('/cases');
+      } finally {
+        setIsCaseLoading(false);
+      }
+    };
+
+    if (caseId) fetchCase();
+  }, [caseId, navigate]);
 
   const handleUpdateEntry = (field: string, value: string) => {
     setEntry(prev => ({ ...prev, [field]: value }));
@@ -105,7 +122,7 @@ const NewClinicalEntryPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isGlobalLoading || isCaseLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>

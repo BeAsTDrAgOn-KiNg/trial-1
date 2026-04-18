@@ -178,6 +178,22 @@ async function startServer() {
     }
   });
 
+  app.get('/api/cases/:id', async (req, res) => {
+    try {
+      const caseItem = await prisma.case.findUnique({
+        where: { id: req.params.id },
+        include: { clinicalEntries: true, reporter: true }
+      });
+      if (caseItem) {
+        res.json(caseItem);
+      } else {
+        res.status(404).json({ error: 'Case not found' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch case' });
+    }
+  });
+
   app.patch('/api/cases/:id', async (req, res) => {
     try {
       const updatedCase = await prisma.case.update({
@@ -397,6 +413,42 @@ async function startServer() {
     }
   });
 
+  // --- Stats Endpoint for Dashboard ---
+  app.get('/api/stats', async (req, res) => {
+    try {
+      const [
+        totalCases,
+        criticalCases,
+        totalDonations,
+        recentCases,
+        lowStockMeds
+      ] = await Promise.all([
+        prisma.case.count(),
+        prisma.case.count({ where: { status: 'critical' } }),
+        prisma.donation.aggregate({ _sum: { amount: true } }),
+        prisma.case.findMany({
+          take: 5,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.medicine.count({
+          where: {
+            quantity: { lte: prisma.medicine.fields.minStockLevel }
+          }
+        })
+      ]);
+
+      res.json({
+        totalCases,
+        criticalCount: criticalCases,
+        totalDonations: totalDonations._sum.amount || 0,
+        recentActivities: recentCases,
+        lowStockMedsCount: lowStockMeds
+      });
+    } catch (error) {
+      console.error('Stats error:', error);
+      res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+  });
   // --- Global Search Endpoint ---
   app.get('/api/search', async (req, res) => {
     try {
@@ -645,16 +697,83 @@ async function startServer() {
     }
   });
 
-  // Example API route for cases
+  // --- Cases with Pagination & Filtering ---
   app.get('/api/cases', async (req, res) => {
     try {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit as string) || 20);
+      const skip = (page - 1) * limit;
+
+      const search = String(req.query.search || '').trim();
+      const status = String(req.query.status || 'All').trim();
+      const year = String(req.query.year || 'All').trim();
+      const month = String(req.query.month || 'All').trim();
+
+      const where: any = {};
+
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { location: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      if (status !== 'All') {
+        where.status = status;
+      }
+
+      // Year/Month filtering is tricky since createdAt is a DateTime
+      // We'll use start/end date ranges if year or month is specified
+      if (year !== 'All' || month !== 'All') {
+        const filterYear = year !== 'All' ? parseInt(year) : new Date().getFullYear();
+        const filterMonth = month !== 'All' ? parseInt(month) - 1 : 0;
+        
+        const startDate = new Date(filterYear, month !== 'All' ? filterMonth : 0, 1);
+        const endDate = new Date(filterYear, month !== 'All' ? filterMonth + 1 : 12, 0, 23, 59, 59);
+        
+        where.createdAt = {
+          gte: startDate,
+          lte: endDate
+        };
+      }
+
+      const [data, total] = await Promise.all([
+        prisma.case.findMany({
+          where,
+          include: { reporter: true },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+        prisma.case.count({ where }),
+      ]);
+
+      res.json({
+        data,
+        metadata: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Fetch cases error:', error);
+      res.status(500).json({ error: 'Failed to fetch cases' });
+    }
+  });
+
+  // --- Export Endpoint (All cases, no pagination) ---
+  app.get('/api/cases/export', async (req, res) => {
+    try {
       const cases = await prisma.case.findMany({
-        include: { reporter: true },
+        include: { reporter: true, clinicalEntries: true },
         orderBy: { createdAt: 'desc' }
       });
       res.json(cases);
     } catch (error) {
-      sendError(res, error, 'Failed to fetch cases');
+      res.status(500).json({ error: 'Failed to export cases' });
     }
   });
 

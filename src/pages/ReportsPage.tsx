@@ -12,7 +12,20 @@ interface ReportsPageProps {
 
 const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
   const navigate = useNavigate();
-  const { medicines, staff, abcRecords, donations, adoptions, cases, isLoading } = useAppContext();
+  const { medicines, staff, abcRecords, donations, adoptions, isLoading } = useAppContext();
+  const [reportCases, setReportCases] = React.useState<any[]>([]);
+  const [isFetchingCases, setIsFetchingCases] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsFetchingCases(true);
+    fetch('/api/cases/export')
+      .then(res => res.json())
+      .then(data => {
+        setReportCases(data);
+        setIsFetchingCases(false);
+      })
+      .catch(() => setIsFetchingCases(false));
+  }, []);
 
   const generateCSV = (data: any[], filename: string) => {
     if (data.length === 0) return;
@@ -40,7 +53,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
     generateCSV(donations, 'pfa_donations_annual_report');
     generateCSV(adoptions, 'pfa_adoption_annual_report');
     
-    const censusData = cases.filter(c => c.status === CaseStatus.RELEASED || c.status === CaseStatus.PERMANENT);
+    const censusData = reportCases.filter(c => c.status === CaseStatus.RELEASED || c.status === CaseStatus.PERMANENT);
     generateCSV(censusData, 'pfa_census_report');
     
     alert("Exporting all reports. Check your downloads folder.");

@@ -51,28 +51,41 @@ const MainActionTile = ({ title, value, icon: Icon, color, onClick, subtext, ale
 
 const DashboardPage: React.FC<DashboardProps> = ({ user }) => {
   const navigate = useNavigate();
-  const { medicines, donations, cases, isLoading } = useAppContext();
+  const { medicines, isLoading } = useAppContext();
+  const [stats, setStats] = React.useState<any>(null);
+  const [isStatsLoading, setIsStatsLoading] = React.useState(true);
   const isAdmin = user.role === 'Admin';
 
   const lowStockCount = useMemo(() => medicines.filter(m => m.quantity <= m.minStockLevel).length, [medicines]);
-  const totalDonationAmount = useMemo(() => donations.reduce((acc, curr) => acc + curr.amount, 0), [donations]);
+  
+  React.useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        setStats(data);
+        setIsStatsLoading(false);
+      })
+      .catch(err => {
+        console.error('Stats fetch failed', err);
+        setIsStatsLoading(false);
+      });
+  }, []);
 
   const recentActivities = useMemo(() => {
-    return cases.slice(0, 3).map(c => {
-      // Extract animal type from title (e.g., "Dog Rescue - DEC-001" -> "Dog")
+    if (!stats) return [];
+    return stats.recentActivities.map((c: any) => {
       const animalType = c.title.split(' ')[0] || 'Animal';
-      
       return {
         id: c.id,
         animal: animalType,
         action: c.description.substring(0, 30) + (c.description.length > 30 ? '...' : ''),
-        time: 'Recently updated',
+        time: 'Recently',
         status: c.status
       };
     });
-  }, [cases]);
+  }, [stats]);
 
-  if (isLoading) {
+  if (isLoading || isStatsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>
@@ -118,7 +131,7 @@ const DashboardPage: React.FC<DashboardProps> = ({ user }) => {
             {user.role === 'Admin' && (
             <MainActionTile 
               title="Donations" 
-              value={`₹ ${totalDonationAmount.toLocaleString('en-IN')}`} 
+              value={`₹ ${(stats?.totalDonations || 0).toLocaleString('en-IN')}`} 
               icon={IndianRupee} 
               color="bg-indigo-600" 
               onClick={() => navigate('/donations')}

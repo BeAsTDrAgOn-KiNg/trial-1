@@ -324,7 +324,15 @@ interface CasesPageProps {
 const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cases, clinicalEntries, medicines, updateCase, isLoading } = useAppContext();
+  const { clinicalEntries, medicines, updateCase } = useAppContext();
+  
+  const [cases, setCases] = useState<Case[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
   const [searchTerm, setSearchTerm] = useState('');
   
   // -- ADVANCED FILTERS --
@@ -340,20 +348,54 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
     if (!selectedCase) return [];
     return clinicalEntries.filter(log => log.caseId === selectedCase.id);
   }, [selectedCase, clinicalEntries]);
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 5;
+
+  const fetchCases = async () => {
+    setIsPageLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: PAGE_SIZE.toString(),
+        search: searchTerm,
+        status: filterStatus,
+        year: filterYear,
+        month: filterMonth,
+      });
+
+      const res = await fetch(`/api/cases?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
+        setCases(result.data);
+        setTotalCount(result.metadata.total);
+        setTotalPages(result.metadata.totalPages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cases:', error);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCases();
+  }, [currentPage, searchTerm, filterStatus, filterYear, filterMonth]);
 
   useEffect(() => {
     const state = location.state as { openCaseId?: string } | null;
     if (state?.openCaseId) {
-      const caseToOpen = cases.find(c => c.id === state.openCaseId);
-      if (caseToOpen) {
-        setSelectedCase(caseToOpen);
-        window.history.replaceState({}, document.title);
+      // If we don't have the case in the current list, we fetch it
+      const cached = cases.find(c => c.id === state.openCaseId);
+      if (cached) {
+        setSelectedCase(cached);
+      } else {
+        fetch(`/api/cases/${state.openCaseId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.error) setSelectedCase(data);
+          });
       }
+      window.history.replaceState({}, document.title);
     }
-  }, [location, cases]);
+  }, [location, cases.length === 0]); // Trigger on mount or deep link
 
   useEffect(() => {
     setCurrentPage(1);
@@ -365,9 +407,14 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
   }, [medicines]);
 
   const years = useMemo(() => {
-    const ys = new Set(cases.map(c => c.createdAt?.split('-')[0] || ''));
-    return ['All', ...Array.from(ys).filter(Boolean).sort().reverse()];
-  }, [cases]);
+    const currentYear = new Date().getFullYear();
+    const startYear = 2024;
+    const ys = [];
+    for (let y = currentYear; y >= startYear; y--) {
+      ys.push(y.toString());
+    }
+    return ['All', ...ys];
+  }, []);
 
   const months = [
     { label: 'All', value: 'All' },
@@ -393,61 +440,6 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
     }
   };
 
-  const filteredCases = useMemo(() => {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    
-    const yesterday = new Date();
-    yesterday.setDate(now.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    // Current Week Range (Start Sunday)
-    const currentWeekStart = new Date(now);
-    currentWeekStart.setDate(now.getDate() - now.getDay());
-    currentWeekStart.setHours(0,0,0,0);
-
-    // Last Week Range
-    const lastWeekEnd = new Date(currentWeekStart);
-    lastWeekEnd.setMilliseconds(-1);
-    const lastWeekStart = new Date(currentWeekStart);
-    lastWeekStart.setDate(currentWeekStart.getDate() - 7);
-
-    return cases
-      .filter(c => {
-        const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              c.location.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesStatus = filterStatus === 'All' || c.status === filterStatus;
-        
-        const dateParts = (c.createdAt || '').split('-');
-        const matchesYear = filterYear === 'All' || dateParts[0] === filterYear;
-        const matchesMonth = filterMonth === 'All' || dateParts[1] === filterMonth;
-
-        let matchesTimeRange = true;
-        const caseDate = new Date(c.createdAt || '');
-        const caseDateStr = (c.createdAt || '').split('T')[0];
-
-        if (filterTimeRange === 'Today') {
-          matchesTimeRange = caseDateStr === todayStr;
-        } else if (filterTimeRange === 'Yesterday') {
-          matchesTimeRange = caseDateStr === yesterdayStr;
-        } else if (filterTimeRange === 'This Week') {
-          matchesTimeRange = caseDate >= currentWeekStart;
-        } else if (filterTimeRange === 'Last Week') {
-          matchesTimeRange = caseDate >= lastWeekStart && caseDate <= lastWeekEnd;
-        }
-
-        return matchesSearch && matchesStatus && matchesYear && matchesMonth && matchesTimeRange;
-      })
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-  }, [searchTerm, filterStatus, filterYear, filterMonth, filterTimeRange, cases]);
-
-  const paginatedCases = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredCases.slice(start, start + PAGE_SIZE);
-  }, [filteredCases, currentPage]);
-
   const resetFilters = () => {
     setSearchTerm('');
     setFilterStatus('All');
@@ -456,7 +448,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
     setFilterTimeRange('All');
   };
 
-  if (isLoading) {
+  if (isPageLoading && cases.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>
@@ -550,14 +542,17 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
 
         <div className="flex items-center justify-between pt-2">
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-             Found <span className="text-[#005F54]">{filteredCases.length}</span> matching cases
+             Found <span className="text-[#005F54]">{totalCount}</span> matching cases
            </p>
-           <button 
-             onClick={resetFilters}
-             className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline flex items-center gap-1"
-           >
-             <X size={12} /> Clear All Filters
-           </button>
+           <div className="flex items-center gap-4">
+             {isPageLoading && <Loader2 size={14} className="animate-spin text-slate-400" />}
+             <button 
+               onClick={resetFilters}
+               className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline flex items-center gap-1"
+             >
+               <X size={12} /> Clear All Filters
+             </button>
+           </div>
         </div>
       </div>
 
@@ -574,7 +569,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {paginatedCases.map((c) => (
+              {cases.map((c) => (
                 <tr key={c.id} onClick={() => setSelectedCase(c)} className="group cursor-pointer hover:bg-emerald-50/10 transition-colors">
                   <td className="px-10 py-8">
                     <div className="flex items-center gap-5">
@@ -624,7 +619,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                   </td>
                 </tr>
               ))}
-              {paginatedCases.length === 0 && (
+              {cases.length === 0 && !isPageLoading && (
                 <tr>
                   <td colSpan={5} className="px-10 py-24 text-center">
                     <div className="flex flex-col items-center gap-4 text-slate-300">
@@ -639,19 +634,19 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
         </div>
         
         {/* Simple Pagination Footer for list */}
-        {filteredCases.length > PAGE_SIZE && (
+        {totalCount > PAGE_SIZE && (
           <div className="p-6 border-t border-slate-50 flex items-center justify-center gap-4">
              <button 
                onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(1, prev - 1)); }}
-               disabled={currentPage === 1}
+               disabled={currentPage === 1 || isPageLoading}
                className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-[#005F54] transition-all disabled:opacity-30"
              >
-                <X size={16} className="rotate-45" /> 
+                <ChevronLeft size={16} /> 
              </button>
-             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Page {currentPage} of {Math.ceil(filteredCases.length / PAGE_SIZE)}</span>
+             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
              <button 
-               onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(Math.ceil(filteredCases.length / PAGE_SIZE), prev + 1)); }}
-               disabled={currentPage === Math.ceil(filteredCases.length / PAGE_SIZE)}
+               onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(totalPages, prev + 1)); }}
+               disabled={currentPage === totalPages || isPageLoading}
                className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-[#005F54] transition-all disabled:opacity-30"
              >
                 <ArrowRight size={16} />
