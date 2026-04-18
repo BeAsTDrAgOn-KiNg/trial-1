@@ -1,0 +1,270 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Admin
+  Doctor
+  Data_Entry @map("Data Entry")
+}
+
+enum CaseStatus {
+  open
+  closed
+  under_treatment
+  recovery
+  critical
+  released
+  permanent
+  deceased
+}
+
+model User {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  email     String   @unique
+  phone     String?
+  role      String   @default("Data Entry")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cases     Case[]   @relation("ReportedBy")
+  adoptions Adoption[]
+
+  @@map("users")
+}
+
+model Animal {
+  id           String   @id @default(uuid())
+  name         String
+  species      String
+  breed        String?
+  age          Int?
+  gender       String?
+  healthStatus String?  @map("health_status")
+  location     String?
+  imageUrl     String?  @map("image_url")
+  status       String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  abcRecord    ABCRecord?
+  adoptions    Adoption[]
+
+  @@map("animals")
+}
+
+model Case {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  location    String
+  status      CaseStatus @default(open)
+  reportedById String?   @map("reported_by")
+  imageUrl    String?    @map("image_url")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  reporter    User?      @relation("ReportedBy", fields: [reportedById], references: [id])
+  clinicalEntries ClinicalEntry[]
+
+  @@map("cases")
+}
+
+model ClinicalEntry {
+  id          String   @id @default(uuid())
+  caseId      String   @map("case_id")
+  date        String
+  symptoms    String?
+  diagnosis   String
+  treatment   String
+  doctorName  String   @map("doctor_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  case        Case     @relation(fields: [caseId], references: [id])
+
+  @@map("clinical_entries")
+}
+
+model WildlifeCase {
+  id                String   @id @default(uuid())
+  caseNumber        String   @map("case_number")
+  dateTime          String   @map("date_time")
+  animal            String
+  species           String
+  schedule          String
+  location          String
+  status            String
+  complainantName   String   @map("complainant_name")
+  complainantPhone  String   @map("complainant_phone")
+  forestDeptContact String?  @map("forest_dept_contact")
+  releasePlan       String?  @map("release_plan")
+  isReadyForRelease Boolean  @default(false) @map("is_ready_for_release")
+  sentFor           String?  @map("sent_for")
+  destination       String?
+  correspondence    String?
+  signature         String?
+  reportedDate      String?  @map("reported_date")
+  resolvedDate      String?  @map("resolved_date")
+  imageUrl          String?  @map("image_url")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("wildlife_cases")
+}
+
+model ABCRecord {
+  id              String   @id @default(uuid())
+  animalId        String   @unique @map("animal_id")
+  sterilized      Boolean
+  vaccinationDone Boolean  @map("vaccination_done")
+  surgeryDate     String   @map("surgery_date")
+  remarks         String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  animal          Animal   @relation(fields: [animalId], references: [id])
+
+  @@map("abc_records")
+}
+
+model AdoptionApplication {
+  id             String   @id @default(uuid())
+  appNumber      String   @map("app_number")
+  adopterName    String   @map("adopter_name")
+  address        String
+  phone          String
+  email          String
+  animalType     String   @map("animal_type")
+  targetGender   String   @map("target_gender")
+  targetColor    String   @map("target_color")
+  status         String
+  date           String
+  time           String
+  description    String?
+  idProof        String?  @map("id_proof")
+  houseType      String?  @map("house_type")
+  hasOtherPets   String?  @map("has_other_pets")
+  vetName        String?  @map("vet_name")
+  reason         String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("adoption_applications")
+}
+
+model Adoption {
+  id        String   @id @default(uuid())
+  animalId  String   @map("animal_id")
+  userId    String   @map("user_id")
+  status    String
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  animal    Animal   @relation(fields: [animalId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("adoptions")
+}
+
+model Declaration {
+  id           String   @id @default(uuid())
+  formNo       String   @map("form_no")
+  declarerName String   @map("declarer_name")
+  address      String
+  phone        String
+  email        String
+  species      String
+  gender       String
+  age          String
+  description  String
+  date         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("declarations")
+}
+
+model Donation {
+  id        String   @id @default(uuid())
+  donorName String   @map("donor_name")
+  amount    Float
+  message   String?
+  paymentId String?  @map("payment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("donations")
+}
+
+model HousekeepingSupply {
+  id            String   @id @default(uuid())
+  name          String
+  quantity      Float
+  minStockLevel Float    @map("min_stock_level")
+  unit          String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("housekeeping_supplies")
+}
+
+model InventoryItem {
+  id            String   @id @default(uuid())
+  name          String
+  category      String
+  quantity      Float
+  unit          String
+  minStockLevel Float?   @map("min_stock_level")
+  lastRestocked String?  @map("last_restocked")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("inventory_items")
+}
+
+model Medicine {
+  id            String   @id @default(uuid())
+  name          String
+  category      String
+  quantity      Float
+  unit          String
+  expiryDate    String?  @map("expiry_date")
+  minStockLevel Float    @map("min_stock_level")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  usages        MedicineUsage[]
+
+  @@map("medicines")
+}
+
+model MedicineUsage {
+  id           String   @id @default(uuid())
+  medicineId   String   @map("medicine_id")
+  medicineName String   @map("medicine_name")
+  quantity     String
+  takenBy      String   @map("taken_by")
+  dateTime     String   @map("date_time")
+  purpose      String
+  ward         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  medicine     Medicine @relation(fields: [medicineId], references: [id])
+
+  @@map("medicine_usages")
+}
+
+model StaffMember {
+  id             String   @id @default(uuid())
+  name           String
+  role           String
+  phone          String
+  joinedDate     String   @map("joined_date")
+  bankFullName   String?  @map("bank_full_name")
+  bankName       String?  @map("bank_name")
+  bankBranch     String?  @map("bank_branch")
+  ifscCode       String?  @map("ifsc_code")
+  accountNumber  String?  @map("account_number")
+  salary         Float?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("staff_members")
+}
