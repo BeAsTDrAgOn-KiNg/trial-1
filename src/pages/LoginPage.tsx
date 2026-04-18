@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Role } from '../types';
 import { ShieldCheck, UserCircle, HeartHandshake, Eye, EyeOff, ShieldAlert, Mail, User as UserIcon, AlertCircle, ChevronDown, CheckCircle, Loader2 } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+  const { notify } = useNotification();
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState(''); // Email
@@ -42,18 +44,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           email: identifier,
           phone: phone,
           role: role,
-          password: password // In real app, hash it
+          password: password
         })
       });
 
+      const data = await res.json();
+
       if (res.ok) {
+        notify('Professional profile created successfully', 'success');
         setGeneratedId(identifier);
       } else {
-        const data = await res.json();
-        setError(data.error || 'Registration failed');
+        const msg = data.error || 'Registration failed';
+        setError(msg);
+        notify(msg, 'error');
       }
     } catch (err) {
       setError('Connection error');
+      notify('Could not connect to authentication server', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -71,22 +78,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         body: JSON.stringify({ email: identifier, password })
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const user = await res.json();
+        notify('Welcome back!', 'success');
         const userToLogin: User = {
-          id: user.id,
-          full_name: user.fullName,
-          email: user.email,
-          role: user.role,
-          phone: user.phone
+          id: data.id,
+          full_name: data.fullName,
+          email: data.email,
+          role: data.role,
+          phone: data.phone
         };
         localStorage.setItem('pfa_user_session', JSON.stringify(userToLogin));
         onLogin(userToLogin);
       } else {
-        setError("Invalid credentials.");
+        const msg = data.error || "Invalid credentials.";
+        setError(msg);
+        notify(msg, 'error');
       }
     } catch (err) {
       setError("Server connection failed.");
+      notify('Authentication service currently unavailable', 'error');
     } finally {
       setIsLoading(false);
     }

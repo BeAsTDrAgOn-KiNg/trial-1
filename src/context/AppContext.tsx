@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useNotification } from './NotificationContext';
 import { 
   Animal,
   Case, 
@@ -17,19 +18,6 @@ import {
   InventoryItem,
   UserProfile
 } from '../types';
-import { 
-  INITIAL_ANIMALS, 
-  INITIAL_CASES, 
-  INITIAL_WILDLIFE, 
-  INITIAL_DECLARATIONS, 
-  INITIAL_MEDS, 
-  INITIAL_DONATIONS, 
-  INITIAL_ADOPTION_APPLICATIONS, 
-  INITIAL_ABC_RECORDS, 
-  INITIAL_HOUSEKEEPING_SUPPLIES, 
-  INITIAL_MEDICINE_USAGE, 
-  INITIAL_STAFF 
-} from '../data/initialData';
 
 interface AppContextType {
   animals: Animal[];
@@ -91,6 +79,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { notify } = useNotification();
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [clinicalEntries, setClinicalEntries] = useState<ClinicalEntry[]>([]);
@@ -108,27 +97,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
         const [
-          animalsRes, 
-          casesRes, 
-          wildlifeRes, 
-          staffRes, 
-          medsRes, 
-          houseRes, 
-          donationsRes, 
-          appsRes,
-          entriesRes,
-          abcRes,
-          declRes,
-          usageRes,
-          itemsRes,
-          adoptionsRes,
-          usersRes
+          animalsRes, casesRes, wildlifeRes, staffRes, medsRes, 
+          houseRes, donationsRes, appsRes, entriesRes, abcRes, 
+          declRes, usageRes, itemsRes, adoptionsRes, usersRes
         ] = await Promise.all([
           fetch('/api/animals'),
           fetch('/api/cases'),
@@ -165,498 +140,299 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       } catch (err) {
         console.error('Failed to load data from backend:', err);
+        notify('Failed to sync data with server. Working in offline mode.', 'error');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [notify]);
+
+  const handleRequest = useCallback(async (
+    apiPath: string,
+    options: RequestInit,
+    successMessage?: string,
+    onSuccess?: (data: any) => void
+  ) => {
+    try {
+      const response = await fetch(apiPath, options);
+      
+      if (response.status === 204) {
+        if (successMessage) notify(successMessage, 'success');
+        if (onSuccess) onSuccess(null);
+        return true;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        notify(data.error || 'Operation failed', 'error');
+        return null;
+      }
+
+      if (successMessage) notify(successMessage, 'success');
+      if (onSuccess) onSuccess(data);
+      return data;
+    } catch (err) {
+      notify('Network error. Check your connection.', 'error');
+      console.error(err);
+      return null;
+    }
+  }, [notify]);
 
   const addAnimal = async (animal: Animal) => {
-    try {
-      const { id, ...data } = animal; // Let prisma generate ID if it's a UUID model
-      const res = await fetch('/api/animals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAnimals(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding animal:', err);
-    }
+    const { id, ...data } = animal;
+    await handleRequest('/api/animals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Animal added', (saved) => setAnimals(prev => [saved, ...prev]));
   };
 
   const updateAnimal = async (animal: Animal) => {
-    try {
-      const res = await fetch(`/api/animals/${animal.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(animal),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAnimals(prev => prev.map(a => a.id === saved.id ? saved : a));
-      }
-    } catch (err) {
-      console.error('Error updating animal:', err);
-    }
-  };
-  
-  const addCase = async (newCase: Case) => {
-    try {
-      const { id, ...data } = newCase;
-      const res = await fetch('/api/cases', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setCases(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding case:', err);
-    }
-  };
-
-  const updateCase = async (updatedCase: Case) => {
-    try {
-      const res = await fetch(`/api/cases/${updatedCase.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedCase),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setCases(prev => prev.map(c => c.id === saved.id ? saved : c));
-      }
-    } catch (err) {
-      console.error('Error updating case:', err);
-    }
-  };
-  
-  const addClinicalEntry = async (entry: ClinicalEntry) => {
-    try {
-      const { id, ...data } = entry;
-      const res = await fetch('/api/clinical-entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setClinicalEntries(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding clinical entry:', err);
-    }
-  };
-
-  const addWildlifeCase = async (newCase: WildlifeCase) => {
-    try {
-      const { id, ...data } = newCase;
-      const res = await fetch('/api/wildlife', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setWildlifeCases(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding wildlife case:', err);
-    }
-  };
-
-  const addDeclaration = async (record: Declaration) => {
-    try {
-      const { id, ...data } = record;
-      const res = await fetch('/api/declarations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setDeclarations(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding declaration:', err);
-    }
-  };
-
-  const updateDeclaration = (record: Declaration) => {
-    setDeclarations(prev => prev.map(d => d.id === record.id ? record : d));
-  };
-
-  const addMedicine = async (newMed: Medicine) => {
-    try {
-      const { id, ...data } = newMed;
-      const res = await fetch('/api/inventory/medicines', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setMedicines(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding medicine:', err);
-    }
-  };
-
-  const updateMedicineQuantity = async (id: string, newQuantity: number) => {
-    try {
-      const res = await fetch(`/api/inventory/medicines/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity: newQuantity }),
-      });
-      if (res.ok) {
-        setMedicines(prev => prev.map(m => m.id === id ? { ...m, quantity: newQuantity } : m));
-      }
-    } catch (err) {
-      console.error('Error updating medicine quantity:', err);
-    }
-  };
-
-  const deleteMedicine = async (id: string) => {
-    try {
-      const res = await fetch(`/api/inventory/medicines/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setMedicines(prev => prev.filter(m => m.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting medicine:', err);
-    }
-  };
-
-  const deleteDonation = (id: string) => {
-    setDonations(prev => prev.filter(d => d.id !== id));
-  };
-
-  const deleteAdoption = async (id: string) => {
-    try {
-      const res = await fetch(`/api/adoptions/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setAdoptions(prev => prev.filter(a => a.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting adoption:', err);
-    }
-  };
-
-  const deleteAdoptionApplication = (id: string) => {
-    setAdoptionApplications(prev => prev.filter(a => a.id !== id));
-  };
-
-  const deleteABCRecord = async (id: string) => {
-    try {
-      const res = await fetch(`/api/abc-records/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setAbcRecords(prev => prev.filter(a => a.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting ABC record:', err);
-    }
-  };
-
-  const deleteHousekeepingSupply = async (id: string) => {
-    try {
-      const res = await fetch(`/api/inventory/housekeeping/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setHousekeepingSupplies(prev => prev.filter(h => h.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting housekeeping supply:', err);
-    }
-  };
-
-  const deleteInventoryItem = async (id: string) => {
-    try {
-      const res = await fetch(`/api/inventory/items/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setInventoryItems(prev => prev.filter(i => i.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting inventory item:', err);
-    }
-  };
-
-  const deleteMedicineUsage = async (id: string) => {
-    try {
-      const res = await fetch(`/api/medicine-usages/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setMedicineUsage(prev => prev.filter(m => m.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting medicine usage:', err);
-    }
-  };
-
-  const deleteStaff = async (id: string) => {
-    try {
-      const res = await fetch(`/api/staff/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setStaff(prev => prev.filter(s => s.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting staff:', err);
-    }
+    await handleRequest(`/api/animals/${animal.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(animal),
+    }, 'Animal updated', (saved) => setAnimals(prev => prev.map(a => a.id === saved.id ? saved : a)));
   };
 
   const deleteAnimal = async (id: string) => {
-    try {
-      const res = await fetch(`/api/animals/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setAnimals(prev => prev.filter(a => a.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting animal:', err);
-    }
+    await handleRequest(`/api/animals/${id}`, { method: 'DELETE' }, 'Animal removed', () => setAnimals(prev => prev.filter(a => a.id !== id)));
+  };
+  
+  const addCase = async (newCase: Case) => {
+    const { id, ...data } = newCase;
+    await handleRequest('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Case created', (saved) => setCases(prev => [saved, ...prev]));
+  };
+
+  const updateCase = async (updatedCase: Case) => {
+    await handleRequest(`/api/cases/${updatedCase.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedCase),
+    }, 'Case updated', (saved) => setCases(prev => prev.map(c => c.id === saved.id ? saved : c)));
   };
 
   const deleteCase = async (id: string) => {
-    try {
-      const res = await fetch(`/api/cases/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setCases(prev => prev.filter(c => c.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting case:', err);
-    }
+    await handleRequest(`/api/cases/${id}`, { method: 'DELETE' }, 'Case removed', () => setCases(prev => prev.filter(c => c.id !== id)));
+  };
+  
+  const addClinicalEntry = async (entry: ClinicalEntry) => {
+    const { id, ...data } = entry;
+    await handleRequest('/api/clinical-entries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Entry captured', (saved) => setClinicalEntries(prev => [saved, ...prev]));
   };
 
   const deleteClinicalEntry = async (id: string) => {
-    try {
-      const res = await fetch(`/api/clinical-entries/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setClinicalEntries(prev => prev.filter(c => c.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting clinical entry:', err);
-    }
+    await handleRequest(`/api/clinical-entries/${id}`, { method: 'DELETE' }, 'Entry removed', () => setClinicalEntries(prev => prev.filter(c => c.id !== id)));
+  };
+
+  const addWildlifeCase = async (newCase: WildlifeCase) => {
+    const { id, ...data } = newCase;
+    await handleRequest('/api/wildlife', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Wildlife rescue added', (saved) => setWildlifeCases(prev => [saved, ...prev]));
+  };
+
+  const deleteWildlifeCase = async (id: string) => {
+    await handleRequest(`/api/wildlife/${id}`, { method: 'DELETE' }, 'Case removed', () => setWildlifeCases(prev => prev.filter(w => w.id !== id)));
+  };
+
+  const addDeclaration = async (record: Declaration) => {
+    const { id, ...data } = record;
+    await handleRequest('/api/declarations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Declaration saved', (saved) => setDeclarations(prev => [saved, ...prev]));
+  };
+
+  const updateDeclaration = async (record: Declaration) => {
+    await handleRequest(`/api/declarations/${record.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+    }, 'Declaration updated', (saved) => setDeclarations(prev => prev.map(d => d.id === saved.id ? saved : d)));
   };
 
   const deleteDeclaration = async (id: string) => {
-    try {
-      const res = await fetch(`/api/declarations/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setDeclarations(prev => prev.filter(d => d.id !== id));
-      }
-    } catch (err) {
-      console.error('Error deleting declaration:', err);
-    }
+    await handleRequest(`/api/declarations/${id}`, { method: 'DELETE' }, 'Declaration removed', () => setDeclarations(prev => prev.filter(d => d.id !== id)));
+  };
+
+  const addMedicine = async (newMed: Medicine) => {
+    const { id, ...data } = newMed;
+    await handleRequest('/api/inventory/medicines', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Medicine added', (saved) => setMedicines(prev => [saved, ...prev]));
+  };
+
+  const updateMedicineQuantity = async (id: string, newQuantity: number) => {
+    await handleRequest(`/api/inventory/medicines/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: newQuantity }),
+    }, 'Stock updated', () => setMedicines(prev => prev.map(m => m.id === id ? { ...m, quantity: newQuantity } : m)));
+  };
+
+  const deleteMedicine = async (id: string) => {
+    await handleRequest(`/api/inventory/medicines/${id}`, { method: 'DELETE' }, 'Medicine removed', () => setMedicines(prev => prev.filter(m => m.id !== id)));
   };
 
   const addDonation = async (donation: Donation) => {
-    try {
-      const { id, ...data } = donation;
-      const res = await fetch('/api/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setDonations(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding donation:', err);
-    }
+    const { id, ...data } = donation;
+    await handleRequest('/api/donations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Donation recorded', (saved) => setDonations(prev => [saved, ...prev]));
+  };
+
+  const deleteDonation = async (id: string) => {
+    await handleRequest(`/api/donations/${id}`, { method: 'DELETE' }, 'Donation removed', () => setDonations(prev => prev.filter(d => d.id !== id)));
   };
 
   const addAdoption = async (adoption: Adoption) => {
-    try {
-      const { id, ...data } = adoption;
-      const res = await fetch('/api/adoptions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAdoptions(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding adoption:', err);
-    }
+    const { id, ...data } = adoption;
+    await handleRequest('/api/adoptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Adoption processed', (saved) => setAdoptions(prev => [saved, ...prev]));
+  };
+
+  const deleteAdoption = async (id: string) => {
+    await handleRequest(`/api/adoptions/${id}`, { method: 'DELETE' }, 'Adoption deleted', () => setAdoptions(prev => prev.filter(a => a.id !== id)));
   };
 
   const addAdoptionApplication = async (application: AdoptionApplication) => {
-    try {
-      const { id, ...data } = application;
-      const res = await fetch('/api/adoptions/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAdoptionApplications(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding adoption application:', err);
-    }
+    const { id, ...data } = application;
+    await handleRequest('/api/adoptions/applications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Application submitted', (saved) => setAdoptionApplications(prev => [saved, ...prev]));
   };
 
-  const updateAdoptionApplication = (application: AdoptionApplication) => {
-    setAdoptionApplications(prev => prev.map(a => a.id === application.id ? application : a));
+  const updateAdoptionApplication = async (application: AdoptionApplication) => {
+    await handleRequest(`/api/adoptions/applications/${application.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(application),
+    }, 'Application updated', (saved) => setAdoptionApplications(prev => prev.map(a => a.id === saved.id ? saved : a)));
+  };
+
+  const deleteAdoptionApplication = async (id: string) => {
+    await handleRequest(`/api/adoptions/applications/${id}`, { method: 'DELETE' }, 'Application removed', () => setAdoptionApplications(prev => prev.filter(a => a.id !== id)));
   };
 
   const addABCRecord = async (record: ABCRecord) => {
-    try {
-      const { id, ...data } = record;
-      const res = await fetch('/api/abc-records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAbcRecords(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding ABC record:', err);
-    }
+    const { id, ...data } = record;
+    await handleRequest('/api/abc-records', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'ABC record added', (saved) => setAbcRecords(prev => [saved, ...prev]));
   };
 
   const updateABCRecord = async (record: ABCRecord) => {
-    try {
-      const res = await fetch(`/api/abc-records/${record.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setAbcRecords(prev => prev.map(a => a.id === saved.id ? saved : a));
-      }
-    } catch (err) {
-      console.error('Error updating ABC record:', err);
-    }
+    await handleRequest(`/api/abc-records/${record.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+    }, 'ABC record updated', (saved) => setAbcRecords(prev => prev.map(a => a.id === saved.id ? saved : a)));
+  };
+
+  const deleteABCRecord = async (id: string) => {
+    await handleRequest(`/api/abc-records/${id}`, { method: 'DELETE' }, 'ABC record removed', () => setAbcRecords(prev => prev.filter(a => a.id !== id)));
   };
 
   const addHousekeepingSupply = async (supply: HousekeepingSupply) => {
-    try {
-      const { id, ...data } = supply;
-      const res = await fetch('/api/inventory/housekeeping', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setHousekeepingSupplies(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding housekeeping supply:', err);
-    }
+    const { id, ...data } = supply;
+    await handleRequest('/api/inventory/housekeeping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Supply added', (saved) => setHousekeepingSupplies(prev => [saved, ...prev]));
   };
 
   const updateHousekeepingSupply = async (supply: HousekeepingSupply) => {
-    try {
-      const res = await fetch(`/api/inventory/housekeeping/${supply.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(supply),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setHousekeepingSupplies(prev => prev.map(h => h.id === saved.id ? saved : h));
-      }
-    } catch (err) {
-      console.error('Error updating housekeeping supply:', err);
-    }
+    await handleRequest(`/api/inventory/housekeeping/${supply.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(supply),
+    }, 'Supply updated', (saved) => setHousekeepingSupplies(prev => prev.map(h => h.id === saved.id ? saved : h)));
+  };
+
+  const deleteHousekeepingSupply = async (id: string) => {
+    await handleRequest(`/api/inventory/housekeeping/${id}`, { method: 'DELETE' }, 'Supply removed', () => setHousekeepingSupplies(prev => prev.filter(h => h.id !== id)));
   };
 
   const addInventoryItem = async (item: InventoryItem) => {
-    try {
-      const { id, ...data } = item;
-      const res = await fetch('/api/inventory/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setInventoryItems(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding inventory item:', err);
-    }
+    const { id, ...data } = item;
+    await handleRequest('/api/inventory/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Item added', (saved) => setInventoryItems(prev => [saved, ...prev]));
   };
 
   const updateInventoryItem = async (item: InventoryItem) => {
-    try {
-      const res = await fetch(`/api/inventory/items/${item.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setInventoryItems(prev => prev.map(i => i.id === saved.id ? saved : i));
-      }
-    } catch (err) {
-      console.error('Error updating inventory item:', err);
-    }
+    await handleRequest(`/api/inventory/items/${item.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    }, 'Item updated', (saved) => setInventoryItems(prev => prev.map(i => i.id === saved.id ? saved : i)));
+  };
+
+  const deleteInventoryItem = async (id: string) => {
+    await handleRequest(`/api/inventory/items/${id}`, { method: 'DELETE' }, 'Item removed', () => setInventoryItems(prev => prev.filter(i => i.id !== id)));
   };
 
   const addMedicineUsage = async (usage: MedicineUsage) => {
-    try {
-      const { id, ...data } = usage;
-      const res = await fetch('/api/medicine-usages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setMedicineUsage(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding medicine usage:', err);
-    }
+    const { id, ...data } = usage;
+    await handleRequest('/api/medicine-usages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Usage recorded', (saved) => setMedicineUsage(prev => [saved, ...prev]));
+  };
+
+  const deleteMedicineUsage = async (id: string) => {
+    await handleRequest(`/api/medicine-usages/${id}`, { method: 'DELETE' }, 'Usage removed', () => setMedicineUsage(prev => prev.filter(m => m.id !== id)));
   };
 
   const addStaff = async (member: StaffMember) => {
-    try {
-      const { id, ...data } = member;
-      const res = await fetch('/api/staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setStaff(prev => [saved, ...prev]);
-      }
-    } catch (err) {
-      console.error('Error adding staff:', err);
-    }
+    const { id, ...data } = member;
+    await handleRequest('/api/staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }, 'Staff member added', (saved) => setStaff(prev => [saved, ...prev]));
   };
 
   const updateStaff = async (member: StaffMember) => {
-    try {
-      const res = await fetch(`/api/staff/${member.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(member),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setStaff(prev => prev.map(s => s.id === saved.id ? saved : s));
-      }
-    } catch (err) {
-      console.error('Error updating staff:', err);
-    }
+    await handleRequest(`/api/staff/${member.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(member),
+    }, 'Staff member updated', (saved) => setStaff(prev => prev.map(s => s.id === saved.id ? saved : s)));
+  };
+
+  const deleteStaff = async (id: string) => {
+    await handleRequest(`/api/staff/${id}`, { method: 'DELETE' }, 'Staff removed', () => setStaff(prev => prev.filter(s => s.id !== id)));
   };
 
   return (
@@ -712,7 +488,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateInventoryItem,
       addMedicineUsage,
       addStaff,
-      updateStaff
+      updateStaff,
     }}>
       {children}
     </AppContext.Provider>

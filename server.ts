@@ -16,6 +16,13 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Error handling helper
+  const sendError = (res: any, error: any, defaultMessage: string) => {
+    console.error(`[API Error] ${defaultMessage}:`, error);
+    const message = error instanceof Error ? error.message : defaultMessage;
+    res.status(500).json({ error: message, success: false });
+  };
+
   // API Routes
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -29,8 +36,7 @@ async function startServer() {
       });
       res.json(animals);
     } catch (error) {
-      console.error('Error fetching animals:', error);
-      res.status(500).json({ error: 'Failed to fetch animals' });
+      sendError(res, error, 'Failed to fetch animals');
     }
   });
 
@@ -41,7 +47,7 @@ async function startServer() {
       });
       res.json(cases);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch wildlife cases' });
+      sendError(res, error, 'Failed to fetch wildlife cases');
     }
   });
 
@@ -52,7 +58,7 @@ async function startServer() {
       });
       res.json(staff);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch staff' });
+      sendError(res, error, 'Failed to fetch staff');
     }
   });
 
@@ -63,7 +69,7 @@ async function startServer() {
       });
       res.json(medicines);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch medicines' });
+      sendError(res, error, 'Failed to fetch medicines');
     }
   });
 
@@ -74,7 +80,7 @@ async function startServer() {
       });
       res.json(items);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch housekeeping' });
+      sendError(res, error, 'Failed to fetch housekeeping');
     }
   });
 
@@ -85,7 +91,7 @@ async function startServer() {
       });
       res.json(donations);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch donations' });
+      sendError(res, error, 'Failed to fetch donations');
     }
   });
 
@@ -96,7 +102,7 @@ async function startServer() {
       });
       res.json(apps);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch applications' });
+      sendError(res, error, 'Failed to fetch applications');
     }
   });
 
@@ -106,7 +112,7 @@ async function startServer() {
       const animal = await prisma.animal.create({ data: req.body });
       res.status(201).json(animal);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create animal' });
+      sendError(res, error, 'Failed to create animal');
     }
   });
 
@@ -118,7 +124,7 @@ async function startServer() {
       });
       res.json(animal);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update animal' });
+      sendError(res, error, 'Failed to update animal');
     }
   });
 
@@ -127,7 +133,7 @@ async function startServer() {
       await prisma.animal.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed to delete animal' });
+      sendError(res, error, 'Failed to delete animal');
     }
   });
 
@@ -137,7 +143,7 @@ async function startServer() {
       const newCase = await prisma.case.create({ data: req.body });
       res.status(201).json(newCase);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create case' });
+      sendError(res, error, 'Failed to create case');
     }
   });
 
@@ -149,7 +155,7 @@ async function startServer() {
       });
       res.json(updatedCase);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update case' });
+      sendError(res, error, 'Failed to update case');
     }
   });
 
@@ -158,7 +164,7 @@ async function startServer() {
       await prisma.case.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed to delete case' });
+      sendError(res, error, 'Failed to delete case');
     }
   });
 
@@ -168,7 +174,7 @@ async function startServer() {
       const newCase = await prisma.wildlifeCase.create({ data: req.body });
       res.status(201).json(newCase);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create wildlife case' });
+      sendError(res, error, 'Failed to create wildlife case');
     }
   });
 
@@ -177,7 +183,7 @@ async function startServer() {
       await prisma.wildlifeCase.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed to delete wildlife case' });
+      sendError(res, error, 'Failed to delete wildlife case');
     }
   });
 
@@ -187,7 +193,7 @@ async function startServer() {
       const staff = await prisma.staffMember.create({ data: req.body });
       res.status(201).json(staff);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create staff member' });
+      sendError(res, error, 'Failed to create staff member');
     }
   });
 
@@ -199,7 +205,7 @@ async function startServer() {
       });
       res.json(staff);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update staff member' });
+      sendError(res, error, 'Failed to update staff member');
     }
   });
 
@@ -208,7 +214,7 @@ async function startServer() {
       await prisma.staffMember.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed to delete staff member' });
+      sendError(res, error, 'Failed to delete staff member');
     }
   });
 
@@ -230,9 +236,8 @@ async function startServer() {
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
     } catch (error: any) {
-      console.error('Registration error:', error);
-      if (error.code === 'P2002') return res.status(400).json({ error: 'Email already exists' });
-      res.status(500).json({ error: 'Registration failed' });
+      if (error.code === 'P2002') return res.status(400).json({ error: 'Email already exists', success: false });
+      sendError(res, error, 'Registration failed');
     }
   });
 
@@ -248,7 +253,7 @@ async function startServer() {
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
-      res.status(500).json({ error: 'Login failed' });
+      sendError(res, error, 'Login failed');
     }
   });
 
@@ -384,7 +389,7 @@ async function startServer() {
       const med = await prisma.medicine.create({ data: req.body });
       res.status(201).json(med);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create medicine' });
+      sendError(res, error, 'Failed to create medicine');
     }
   });
 
@@ -396,7 +401,7 @@ async function startServer() {
       });
       res.json(med);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to update medicine' });
+      sendError(res, error, 'Failed to update medicine');
     }
   });
 
@@ -405,7 +410,7 @@ async function startServer() {
       await prisma.medicine.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed to delete medicine' });
+      sendError(res, error, 'Failed to delete medicine');
     }
   });
 
@@ -415,7 +420,7 @@ async function startServer() {
       const donation = await prisma.donation.create({ data: req.body });
       res.status(201).json(donation);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create donation' });
+      sendError(res, error, 'Failed to create donation');
     }
   });
 
@@ -425,7 +430,7 @@ async function startServer() {
       const appRecord = await prisma.adoptionApplication.create({ data: req.body });
       res.status(201).json(appRecord);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create adoption application' });
+      sendError(res, error, 'Failed to create adoption application');
     }
   });
 
@@ -435,7 +440,7 @@ async function startServer() {
       const decls = await prisma.declaration.findMany({ orderBy: { createdAt: 'desc' } });
       res.json(decls);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to fetch declarations');
     }
   });
 
@@ -444,7 +449,7 @@ async function startServer() {
       const decl = await prisma.declaration.create({ data: req.body });
       res.status(201).json(decl);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to create declaration');
     }
   });
 
@@ -453,7 +458,7 @@ async function startServer() {
       await prisma.declaration.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-       res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to delete declaration');
     }
   });
 
@@ -465,7 +470,7 @@ async function startServer() {
       });
       res.json(adoptions);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to fetch adoptions');
     }
   });
 
@@ -474,7 +479,7 @@ async function startServer() {
       const adoption = await prisma.adoption.create({ data: req.body });
       res.status(201).json(adoption);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to create adoption');
     }
   });
 
@@ -483,7 +488,7 @@ async function startServer() {
       await prisma.adoption.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-       res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to delete adoption');
     }
   });
 
@@ -493,7 +498,7 @@ async function startServer() {
       const items = await prisma.inventoryItem.findMany({ orderBy: { name: 'asc' } });
       res.json(items);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to fetch inventory items');
     }
   });
 
@@ -502,7 +507,7 @@ async function startServer() {
       const item = await prisma.inventoryItem.create({ data: req.body });
       res.status(201).json(item);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to create inventory item');
     }
   });
 
@@ -514,7 +519,7 @@ async function startServer() {
       });
       res.json(item);
     } catch (error) {
-       res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to update inventory item');
     }
   });
 
@@ -523,7 +528,7 @@ async function startServer() {
       await prisma.inventoryItem.delete({ where: { id: req.params.id } });
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to delete inventory item');
     }
   });
 
@@ -533,7 +538,7 @@ async function startServer() {
       const users = await prisma.user.findMany({ orderBy: { fullName: 'asc' } });
       res.json(users);
     } catch (error) {
-      res.status(500).json({ error: 'Failed' });
+      sendError(res, error, 'Failed to fetch users');
     }
   });
 
@@ -546,8 +551,7 @@ async function startServer() {
       });
       res.json(cases);
     } catch (error) {
-      console.error('Error fetching cases:', error);
-      res.status(500).json({ error: 'Failed to fetch cases' });
+      sendError(res, error, 'Failed to fetch cases');
     }
   });
 
