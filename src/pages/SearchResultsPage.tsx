@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { 
   Search, 
@@ -11,54 +11,53 @@ import {
   MapPin, 
   AlertCircle,
   Undo2,
-  FileSearch
+  FileSearch,
+  Loader2
 } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
+import { Case, WildlifeCase, Animal } from '../types';
 
 const SearchResultsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { cases, wildlifeCases, animals, isLoading } = useAppContext();
+  const [results, setResults] = useState<{ cases: Case[], wildlife: WildlifeCase[], animals: Animal[] }>({
+    cases: [],
+    wildlife: [],
+    animals: []
+  });
+  const [isSearching, setIsSearching] = useState(false);
   
   const query = new URLSearchParams(location.search).get('q') || '';
 
-  const results = useMemo(() => {
-    if (!query.trim()) return { cases: [], wildlife: [], animals: [] };
-
-    const term = query.toLowerCase();
-
-    const filteredCases = cases.filter(c => 
-      c.id.toLowerCase().includes(term) ||
-      c.title.toLowerCase().includes(term) ||
-      (c.location || '').toLowerCase().includes(term)
-    );
-
-    const filteredWildlife = wildlifeCases.filter(w => 
-      w.caseNumber.toLowerCase().includes(term) ||
-      w.animal.toLowerCase().includes(term) ||
-      w.complainantName.toLowerCase().includes(term) ||
-      w.location.toLowerCase().includes(term)
-    );
-
-    const filteredAnimals = animals.filter(a => 
-      a.name.toLowerCase().includes(term) ||
-      a.species.toLowerCase().includes(term) ||
-      a.id.toLowerCase().includes(term)
-    );
-
-    return {
-      cases: filteredCases,
-      wildlife: filteredWildlife,
-      animals: filteredAnimals
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!query.trim()) return;
+      
+      setIsSearching(true);
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setResults(data);
+        }
+      } catch (error) {
+        console.error('Search fetch failed:', error);
+      } finally {
+        setIsSearching(false);
+      }
     };
-  }, [query, cases, wildlifeCases, animals]);
+
+    fetchResults();
+  }, [query]);
 
   const totalResults = results.cases.length + results.wildlife.length + results.animals.length;
 
-  if (isLoading) {
+  if (isSearching) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005F54]"></div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-16 h-16 bg-emerald-50 rounded-3xl flex items-center justify-center border border-emerald-100 shadow-sm">
+          <Loader2 className="text-[#005F54] animate-spin" size={32} />
+        </div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Searching sanctuary records...</p>
       </div>
     );
   }
@@ -116,7 +115,7 @@ const SearchResultsPage: React.FC = () => {
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#005F54] font-black border border-emerald-100 group-hover:bg-[#005F54] group-hover:text-white transition-all">
-                        {c.species.charAt(0)}
+                        {c.title.charAt(0)}
                       </div>
                       <div>
                         <p className="font-black text-slate-800 tracking-tight">#{c.id.slice(0,8).toUpperCase()} • {c.title}</p>

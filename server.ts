@@ -397,6 +397,55 @@ async function startServer() {
     }
   });
 
+  // --- Global Search Endpoint ---
+  app.get('/api/search', async (req, res) => {
+    try {
+      const query = String(req.query.q || '').trim();
+      if (!query) {
+        return res.json({ cases: [], wildlife: [], animals: [] });
+      }
+
+      // Perform parallel search across multiple tables
+      const [cases, wildlife, animals] = await Promise.all([
+        prisma.case.findMany({
+          where: {
+            OR: [
+              { title: { contains: query, mode: 'insensitive' } },
+              { description: { contains: query, mode: 'insensitive' } },
+              { location: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+          take: 10, // Limit results for efficiency
+        }),
+        prisma.wildlifeCase.findMany({
+          where: {
+            OR: [
+              { caseNumber: { contains: query, mode: 'insensitive' } },
+              { animal: { contains: query, mode: 'insensitive' } },
+              { location: { contains: query, mode: 'insensitive' } },
+              { complainantName: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+          take: 10,
+        }),
+        prisma.animal.findMany({
+          where: {
+            OR: [
+              { name: { contains: query, mode: 'insensitive' } },
+              { species: { contains: query, mode: 'insensitive' } },
+              { breed: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+          take: 10,
+        }),
+      ]);
+
+      res.json({ cases, wildlife, animals });
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Search failed' });
+    }
+  });
   app.post('/api/medicine-usages', async (req, res) => {
     try {
       const { medicineId, quantity, ...rest } = req.body;
