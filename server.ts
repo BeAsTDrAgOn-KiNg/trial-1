@@ -33,6 +33,72 @@ async function startServer() {
     }
   });
 
+  app.get('/api/wildlife', async (req, res) => {
+    try {
+      const cases = await prisma.wildlifeCase.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(cases);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch wildlife cases' });
+    }
+  });
+
+  app.get('/api/staff', async (req, res) => {
+    try {
+      const staff = await prisma.staffMember.findMany({
+        orderBy: { name: 'asc' }
+      });
+      res.json(staff);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch staff' });
+    }
+  });
+
+  app.get('/api/inventory/medicines', async (req, res) => {
+    try {
+      const medicines = await prisma.medicine.findMany({
+        orderBy: { name: 'asc' }
+      });
+      res.json(medicines);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch medicines' });
+    }
+  });
+
+  app.get('/api/inventory/housekeeping', async (req, res) => {
+    try {
+      const items = await prisma.housekeepingSupply.findMany({
+        orderBy: { name: 'asc' }
+      });
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch housekeeping' });
+    }
+  });
+
+  app.get('/api/donations', async (req, res) => {
+    try {
+      const donations = await prisma.donation.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(donations);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch donations' });
+    }
+  });
+
+  app.get('/api/adoptions/applications', async (req, res) => {
+    try {
+      const apps = await prisma.adoptionApplication.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(apps);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch applications' });
+    }
+  });
+
   // Example API route for cases
   app.get('/api/cases', async (req, res) => {
     try {
