@@ -312,8 +312,9 @@ const NewCasePage: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Case Number *</label>
+                <label htmlFor="caseNumber" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Case Number *</label>
                 <input 
+                  id="caseNumber"
                   required
                   placeholder="Enter Case ID..."
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black placeholder:text-slate-300"
@@ -330,12 +331,13 @@ const NewCasePage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Typeable Dropdown for Rescue Area */}
               <div className="space-y-2 relative" ref={areaRef}>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rescue Area (Mysuru) *</label>
+                <label htmlFor="rescueArea" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rescue Area (Mysuru) *</label>
                 <div className="relative">
                    <div className={`absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-opacity ${areaSearch ? 'opacity-0' : 'opacity-100'}`}>
                       <Search size={16} />
                    </div>
                    <input 
+                     id="rescueArea"
                      type="text"
                      placeholder="Search or select area..."
                      className="w-full pl-11 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black"
@@ -435,8 +437,9 @@ const NewCasePage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                <label htmlFor="compPhone" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
                 <input 
+                  id="compPhone"
                   type="tel" 
                   minLength={10}
                   maxLength={10}
@@ -472,9 +475,10 @@ const NewCasePage: React.FC = () => {
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Animal Category</label>
+              <label htmlFor="animalType" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Animal Category</label>
               <div className="relative">
                 <select 
+                  id="animalType"
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black appearance-none"
                   value={formData.animalType}
                   onChange={e => setFormData({...formData, animalType: e.target.value})}
