@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "test": "NODE_ENV=test jest",
+    "test": "cross-env NODE_ENV=test jest",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -39,6 +39,7 @@
     "@types/node": "^22.14.0",
     "@types/supertest": "^7.2.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "cross-env": "^10.1.0",
     "jest": "^30.3.0",
     "jest-mock-extended": "^4.0.0",
     "nodemon": "^3.1.14",
