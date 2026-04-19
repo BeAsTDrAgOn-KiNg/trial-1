@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EditCasePage from './EditCasePage';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { mockAppContext } from '../test/mocks';
 
 const mockUpdateCase = jest.fn();
@@ -30,13 +30,14 @@ const mockCase = {
   }
 };
 
-const renderEditCase = () => {
+const renderEditCase = (caseId = 'case-123') => {
   return render(
-    <BrowserRouter>
+    <MemoryRouter initialEntries={[`/edit/${caseId}`]}>
       <Routes>
         <Route path="/edit/:caseId" element={<EditCasePage />} />
+        <Route path="/cases" element={<div>Cases List Page</div>} />
       </Routes>
-    </BrowserRouter>
+    </MemoryRouter>
   );
 };
 
@@ -48,9 +49,6 @@ describe('EditCasePage', () => {
     
     // Default fetch response for case details
     fetchMock.mockResponse(JSON.stringify(mockCase));
-    
-    // Simulate navigation to /edit/case-123
-    window.history.pushState({}, '', '/edit/case-123');
   });
 
   it('loads case data and renders form correctly', async () => {

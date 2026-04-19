@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NewCasePage from './NewCasePage';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { mockAppContext } from '../test/mocks';
 
 // Mocking storage helpers
@@ -23,9 +23,12 @@ jest.mock('../context/AppContext', () => ({
 
 const renderNewCase = () => {
   return render(
-    <BrowserRouter>
-      <NewCasePage />
-    </BrowserRouter>
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route path="/" element={<NewCasePage />} />
+        <Route path="/cases" element={<div>Cases List Page</div>} />
+      </Routes>
+    </MemoryRouter>
   );
 };
 
