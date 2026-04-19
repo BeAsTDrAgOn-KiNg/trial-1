@@ -1,7 +1,26 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import App from './App';
-import './test/mocks';
+
+// Mocking Contexts to prevent real API calls and side effects
+jest.mock('./context/AppContext', () => {
+  const actual = jest.requireActual('./context/AppContext');
+  return {
+    ...actual,
+    AppProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="app-provider">{children}</div>,
+    useAppContext: () => ({
+      lowStockMedicines: [],
+      isLoading: false,
+    }),
+  };
+});
+
+jest.mock('./context/NotificationContext', () => ({
+  NotificationProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="notification-provider">{children}</div>,
+  useNotification: () => ({
+    notify: jest.fn(),
+  }),
+}));
 
 // Mocking localStorage
 const localStorageMock = (function() {
