@@ -175,8 +175,9 @@ const EditCasePage: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Case Number *</label>
+                <label htmlFor="caseNumber" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Case Number *</label>
                 <input 
+                  id="caseNumber"
                   required
                   placeholder="Enter Case ID..."
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500 focus:outline-none transition-all text-sm font-bold text-black"
@@ -234,8 +235,9 @@ const EditCasePage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                <label htmlFor="compPhone" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
                 <input 
+                  id="compPhone"
                   type="tel" 
                   minLength={10}
                   maxLength={10}
