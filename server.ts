@@ -46,6 +46,23 @@ async function startServer() {
     res.status(500).json({ error: message, success: false });
   };
 
+  /**
+   * Strips relational fields and immutable fields (id, createdAt) from data
+   * to prevent Prisma from throwing validation errors during create/update.
+   */
+  const sanitizeData = (data: any) => {
+    const { id, createdAt, updatedAt, reporter, clinicalEntries, animal, abcRecord, adoptions, cases, usages, medicine, user, ...rest } = data;
+    const sanitized: any = {};
+    // Only keep primary types (strings, numbers, booleans, null)
+    // This prevents accidental nested update objects that weren't intended
+    for (const key in rest) {
+      if (rest[key] === null || typeof rest[key] !== 'object') {
+        sanitized[key] = rest[key];
+      }
+    }
+    return sanitized;
+  };
+
   // API Routes
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -140,7 +157,7 @@ async function startServer() {
   // --- Animals ---
   app.post('/api/animals', async (req, res) => {
     try {
-      const animal = await prisma.animal.create({ data: req.body });
+      const animal = await prisma.animal.create({ data: sanitizeData(req.body) });
       res.status(201).json(animal);
     } catch (error) {
       sendError(res, error, 'Failed to create animal');
@@ -151,7 +168,7 @@ async function startServer() {
     try {
       const animal = await prisma.animal.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(animal);
     } catch (error) {
@@ -171,7 +188,7 @@ async function startServer() {
   // --- Cases ---
   app.post('/api/cases', async (req, res) => {
     try {
-      const newCase = await prisma.case.create({ data: req.body });
+      const newCase = await prisma.case.create({ data: sanitizeData(req.body) });
       res.status(201).json(newCase);
     } catch (error) {
       sendError(res, error, 'Failed to create case');
@@ -198,7 +215,7 @@ async function startServer() {
     try {
       const updatedCase = await prisma.case.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(updatedCase);
     } catch (error) {
@@ -218,7 +235,7 @@ async function startServer() {
   // --- Wildlife ---
   app.post('/api/wildlife', async (req, res) => {
     try {
-      const newCase = await prisma.wildlifeCase.create({ data: req.body });
+      const newCase = await prisma.wildlifeCase.create({ data: sanitizeData(req.body) });
       res.status(201).json(newCase);
     } catch (error) {
       sendError(res, error, 'Failed to create wildlife case');
@@ -237,7 +254,7 @@ async function startServer() {
   // --- Staff ---
   app.post('/api/staff', async (req, res) => {
     try {
-      const staff = await prisma.staffMember.create({ data: req.body });
+      const staff = await prisma.staffMember.create({ data: sanitizeData(req.body) });
       res.status(201).json(staff);
     } catch (error) {
       sendError(res, error, 'Failed to create staff member');
@@ -248,7 +265,7 @@ async function startServer() {
     try {
       const staff = await prisma.staffMember.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(staff);
     } catch (error) {
@@ -316,7 +333,7 @@ async function startServer() {
 
   app.post('/api/clinical-entries', async (req, res) => {
     try {
-      const entry = await prisma.clinicalEntry.create({ data: req.body });
+      const entry = await prisma.clinicalEntry.create({ data: sanitizeData(req.body) });
       res.status(201).json(entry);
     } catch (error) {
       res.status(500).json({ error: 'Failed' });
@@ -344,7 +361,7 @@ async function startServer() {
 
   app.post('/api/abc-records', async (req, res) => {
     try {
-      const record = await prisma.aBCRecord.create({ data: req.body });
+      const record = await prisma.aBCRecord.create({ data: sanitizeData(req.body) });
       res.status(201).json(record);
     } catch (error) {
       res.status(500).json({ error: 'Failed' });
@@ -355,7 +372,7 @@ async function startServer() {
     try {
       const record = await prisma.aBCRecord.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(record);
     } catch (error) {
@@ -375,7 +392,7 @@ async function startServer() {
   // --- Inventory: Housekeeping ---
   app.post('/api/inventory/housekeeping', async (req, res) => {
     try {
-      const item = await prisma.housekeepingSupply.create({ data: req.body });
+      const item = await prisma.housekeepingSupply.create({ data: sanitizeData(req.body) });
       res.status(201).json(item);
     } catch (error) {
       res.status(500).json({ error: 'Failed' });
@@ -386,7 +403,7 @@ async function startServer() {
     try {
       const item = await prisma.housekeepingSupply.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(item);
     } catch (error) {
@@ -509,7 +526,7 @@ async function startServer() {
           data: { 
             medicineId, 
             quantity: String(quantity), 
-            ...rest,
+            ...sanitizeData(rest),
             dateTime: new Date().toISOString()
           } 
         }),
@@ -541,7 +558,7 @@ async function startServer() {
 
   app.post('/api/inventory/medicines', async (req, res) => {
     try {
-      const med = await prisma.medicine.create({ data: req.body });
+      const med = await prisma.medicine.create({ data: sanitizeData(req.body) });
       res.status(201).json(med);
     } catch (error) {
       sendError(res, error, 'Failed to create medicine');
@@ -552,7 +569,7 @@ async function startServer() {
     try {
       const med = await prisma.medicine.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(med);
     } catch (error) {
@@ -572,7 +589,7 @@ async function startServer() {
   // --- Donations ---
   app.post('/api/donations', async (req, res) => {
     try {
-      const donation = await prisma.donation.create({ data: req.body });
+      const donation = await prisma.donation.create({ data: sanitizeData(req.body) });
       res.status(201).json(donation);
     } catch (error) {
       sendError(res, error, 'Failed to create donation');
@@ -582,7 +599,7 @@ async function startServer() {
   // --- Adoptions ---
   app.post('/api/adoptions/applications', async (req, res) => {
     try {
-      const appRecord = await prisma.adoptionApplication.create({ data: req.body });
+      const appRecord = await prisma.adoptionApplication.create({ data: sanitizeData(req.body) });
       res.status(201).json(appRecord);
     } catch (error) {
       sendError(res, error, 'Failed to create adoption application');
@@ -601,7 +618,7 @@ async function startServer() {
 
   app.post('/api/declarations', async (req, res) => {
     try {
-      const decl = await prisma.declaration.create({ data: req.body });
+      const decl = await prisma.declaration.create({ data: sanitizeData(req.body) });
       res.status(201).json(decl);
     } catch (error) {
       sendError(res, error, 'Failed to create declaration');
@@ -631,7 +648,7 @@ async function startServer() {
 
   app.post('/api/adoptions', async (req, res) => {
     try {
-      const adoption = await prisma.adoption.create({ data: req.body });
+      const adoption = await prisma.adoption.create({ data: sanitizeData(req.body) });
       res.status(201).json(adoption);
     } catch (error) {
       sendError(res, error, 'Failed to create adoption');
@@ -659,7 +676,7 @@ async function startServer() {
 
   app.post('/api/inventory/items', async (req, res) => {
     try {
-      const item = await prisma.inventoryItem.create({ data: req.body });
+      const item = await prisma.inventoryItem.create({ data: sanitizeData(req.body) });
       res.status(201).json(item);
     } catch (error) {
       sendError(res, error, 'Failed to create inventory item');
@@ -670,7 +687,7 @@ async function startServer() {
     try {
       const item = await prisma.inventoryItem.update({
         where: { id: req.params.id },
-        data: req.body
+        data: sanitizeData(req.body)
       });
       res.json(item);
     } catch (error) {
