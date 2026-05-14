@@ -120,14 +120,17 @@ model WildlifeCase {
 
 model ABCRecord {
   id              String   @id @default(uuid())
-  animalId        String   @unique @map("animal_id")
+  animalId        String?  @unique @map("animal_id")
+  maleCount       Int?     @map("male_count")
+  femaleCount     Int?     @map("female_count")
+  area            String?
   sterilized      Boolean
   vaccinationDone Boolean  @map("vaccination_done")
   surgeryDate     String   @map("surgery_date")
   remarks         String?
   createdAt       DateTime @default(now()) @map("created_at")
 
-  animal          Animal   @relation(fields: [animalId], references: [id])
+  animal          Animal?  @relation(fields: [animalId], references: [id])
 
   @@map("abc_records")
 }
@@ -136,6 +139,8 @@ model AdoptionApplication {
   id             String   @id @default(uuid())
   appNumber      String   @map("app_number")
   adopterName    String   @map("adopter_name")
+  adopterAge     String?  @map("adopter_age")
+  adopterGender  String?  @map("adopter_gender")
   address        String
   phone          String
   email          String
@@ -191,6 +196,7 @@ model Donation {
   id        String   @id @default(uuid())
   donorName String   @map("donor_name")
   amount    Float
+  date      String?
   message   String?
   paymentId String?  @map("payment_id")
   createdAt DateTime @default(now()) @map("created_at")

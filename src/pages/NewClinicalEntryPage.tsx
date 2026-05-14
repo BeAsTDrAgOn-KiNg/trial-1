@@ -21,11 +21,13 @@ import { useAppContext } from '../context/AppContext';
 import { Case, ClinicalEntry } from '../types';
 
 const NewClinicalEntryPage: React.FC = () => {
-  const { caseId } = useParams();
+  const { caseId, logId } = useParams();
   const navigate = useNavigate();
-  const { medicines, addClinicalEntry, isLoading: isGlobalLoading } = useAppContext();
+  const { medicines, addClinicalEntry, updateClinicalEntry, clinicalEntries, isLoading: isGlobalLoading } = useAppContext();
   const [targetCase, setTargetCase] = useState<Case | null>(null);
   const [isCaseLoading, setIsCaseLoading] = useState(true);
+
+  const isEditMode = !!logId;
 
   const createInitialEntry = () => ({
     date: new Date().toISOString().split('T')[0],
@@ -37,6 +39,21 @@ const NewClinicalEntryPage: React.FC = () => {
 
   const [entry, setEntry] = useState(createInitialEntry());
   const [selectedMeds, setSelectedMeds] = useState<{ id: string, quantity: number }[]>([]);
+
+  useEffect(() => {
+    if (isEditMode && clinicalEntries.length > 0) {
+      const existing = clinicalEntries.find(ce => ce.id === logId);
+      if (existing) {
+        setEntry({
+          date: existing.date,
+          symptoms: existing.symptoms || '',
+          diagnosis: existing.diagnosis,
+          treatment: existing.treatment,
+          doctorName: existing.doctorName
+        });
+      }
+    }
+  }, [isEditMode, logId, clinicalEntries]);
 
   useEffect(() => {
     const fetchCase = async () => {
@@ -88,18 +105,31 @@ const NewClinicalEntryPage: React.FC = () => {
         return;
       }
 
-      const newEntry: ClinicalEntry = {
-        id: `ce-${Date.now()}`,
-        caseId: targetCase.id,
-        date: entry.date,
-        symptoms: entry.symptoms,
-        diagnosis: entry.diagnosis,
-        treatment: entry.treatment,
-        doctorName: entry.doctorName,
-        createdAt: new Date().toISOString()
-      };
-
-      addClinicalEntry(newEntry);
+      if (isEditMode) {
+        const updatedEntry: ClinicalEntry = {
+          id: logId!,
+          caseId: targetCase.id,
+          date: entry.date,
+          symptoms: entry.symptoms,
+          diagnosis: entry.diagnosis,
+          treatment: entry.treatment,
+          doctorName: entry.doctorName,
+          createdAt: new Date().toISOString() // Or keep original createdAt if available
+        };
+        updateClinicalEntry(updatedEntry);
+      } else {
+        const newEntry: ClinicalEntry = {
+          id: `ce-${Date.now()}`,
+          caseId: targetCase.id,
+          date: entry.date,
+          symptoms: entry.symptoms,
+          diagnosis: entry.diagnosis,
+          treatment: entry.treatment,
+          doctorName: entry.doctorName,
+          createdAt: new Date().toISOString()
+        };
+        addClinicalEntry(newEntry);
+      }
       
       // Handle medicine usage
       selectedMeds.forEach(m => {
@@ -146,8 +176,8 @@ const NewClinicalEntryPage: React.FC = () => {
           <ChevronLeft size={24} />
         </button>
         <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Add Treatments</h1>
-          <p className="text-slate-500 font-medium">Add medicines given to {targetCase.id.slice(0, 8).toUpperCase()}</p>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">{isEditMode ? 'Edit Treatments' : 'Add Treatments'}</h1>
+          <p className="text-slate-500 font-medium">{isEditMode ? 'Update' : 'Add'} medicines given to {targetCase.id.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
 
@@ -335,7 +365,7 @@ const NewClinicalEntryPage: React.FC = () => {
               className="flex-1 py-5 bg-[#005F54] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-900/10 hover:bg-[#004a42] transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               <Save size={18} />
-              Save Clinical Entry
+              {isEditMode ? 'Update Clinical Entry' : 'Save Clinical Entry'}
             </button>
           </div>
         </form>

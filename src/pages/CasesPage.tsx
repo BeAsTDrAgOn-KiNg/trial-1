@@ -393,9 +393,10 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
             if (!data.error) setSelectedCase(data);
           });
       }
-      window.history.replaceState({}, document.title);
+      // Clear the state so it doesn't trigger again on filter/pagination changes
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location, cases.length === 0]); // Trigger on mount or deep link
+  }, [location, cases.length]); 
 
   useEffect(() => {
     setCurrentPage(1);
@@ -436,7 +437,10 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
     if (selectedCase) {
       const updatedCase = { ...selectedCase, [field]: value };
       setSelectedCase(updatedCase);
-      updateCase(updatedCase);
+      updateCase(updatedCase).then(() => {
+        // Refresh cases list to reflect status change in table
+        fetchCases();
+      });
     }
   };
 
@@ -789,7 +793,15 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                               </div>
                             </td>
                             <td className="px-10 py-7 text-right align-top">
-                               <button className="p-3 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-2xl transition-all"><Edit2 size={18} /></button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   navigate(`/cases/${selectedCase.id}/clinical/${log.id}/edit`);
+                                 }}
+                                 className="p-3 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-2xl transition-all"
+                               >
+                                 <Edit2 size={18} />
+                               </button>
                             </td>
                           </tr>
                         ))

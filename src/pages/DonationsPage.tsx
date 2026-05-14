@@ -20,7 +20,9 @@ import {
   Clock,
   Save,
   CreditCard,
-  IdCard
+  IdCard,
+  Info,
+  Trash2
 } from 'lucide-react';
 import { Donation } from '../types';
 import { useAppContext } from '../context/AppContext';
@@ -39,7 +41,7 @@ const DonationsPage: React.FC = () => {
     amount: '',
     message: '',
     paymentId: '',
-    createdAt: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0]
   });
 
   const filteredDonations = useMemo(() => {
@@ -49,7 +51,8 @@ const DonationsPage: React.FC = () => {
                             d.id.toLowerCase().includes(term);
       
       let matchesTime = true;
-      const dDate = new Date(d.createdAt || '');
+      const dDateStr = d.date || d.createdAt || '';
+      const dDate = new Date(dDateStr);
       const now = new Date();
       
       if (timeFilter === 'Weekly') {
@@ -63,7 +66,7 @@ const DonationsPage: React.FC = () => {
       }
 
       return matchesSearch && matchesTime;
-    }).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+    }).sort((a, b) => new Date(b.date || b.createdAt || '').getTime() - new Date(a.date || a.createdAt || '').getTime());
   }, [donations, searchTerm, timeFilter]);
 
   const donorAggregates = useMemo(() => {
@@ -96,7 +99,8 @@ const DonationsPage: React.FC = () => {
     const currentYear = now.getFullYear();
     let weekly = 0, monthly = 0, yearly = 0;
     donations.forEach(d => {
-      const dDate = new Date(d.createdAt || '');
+      const dDateStr = d.date || d.createdAt || '';
+      const dDate = new Date(dDateStr);
       if (dDate >= startOfWeek) weekly += d.amount;
       if (dDate.getMonth() === currentMonth && dDate.getFullYear() === currentYear) monthly += d.amount;
       if (dDate.getFullYear() === currentYear) yearly += d.amount;
@@ -123,11 +127,12 @@ const DonationsPage: React.FC = () => {
       amount: parseFloat(newEntry.amount) || 0,
       message: newEntry.message,
       paymentId: newEntry.paymentId,
-      createdAt: new Date(newEntry.createdAt).toISOString()
+      date: newEntry.date,
+      createdAt: new Date().toISOString()
     };
     addDonation(entry);
     alert("Donation registered successfully.");
-    setNewEntry({ donorName: '', amount: '', message: '', paymentId: '', createdAt: new Date().toISOString().split('T')[0] });
+    setNewEntry({ donorName: '', amount: '', message: '', paymentId: '', date: new Date().toISOString().split('T')[0] });
   };
 
   if (isLoading) {
@@ -320,8 +325,8 @@ const DonationsPage: React.FC = () => {
                     type="date"
                     required 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none" 
-                    value={newEntry.createdAt} 
-                    onChange={e => setNewEntry({...newEntry, createdAt: e.target.value})} 
+                    value={newEntry.date} 
+                    onChange={e => setNewEntry({...newEntry, date: e.target.value})} 
                   />
                 </div>
                 <div className="space-y-2">
@@ -446,17 +451,17 @@ const DonationsPage: React.FC = () => {
                         <span className="text-xs font-medium text-slate-500 line-clamp-1 max-w-[150px]">{row.message || '-'}</span>
                       </td>
                       <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">₹ {row.amount.toLocaleString('en-IN')}</td>
-                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{new Date(row.createdAt || '').toLocaleDateString('en-GB')}</td>
+                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{row.date || new Date(row.createdAt || '').toLocaleDateString('en-GB')}</td>
                       <td className="px-8 py-6 text-right no-print">
                         <div className="flex justify-end gap-2">
                           <button className="p-2.5 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-xl transition-all">
-                            <FileText size={20} />
+                            <Info size={20} />
                           </button>
                           <button 
                             onClick={() => handleRemoveDonation(row.id)}
                             className="p-2.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                           >
-                            <AlertCircle size={20} />
+                            <Trash2 size={20} />
                           </button>
                         </div>
                       </td>

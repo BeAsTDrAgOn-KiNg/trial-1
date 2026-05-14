@@ -16,7 +16,7 @@ export const sendError = (res: Response, error: any, defaultMessage: string) => 
 export const sanitizeData = (data: any) => {
   const { 
     id, createdAt, updatedAt, 
-    reporter, clinicalEntries, animal, 
+    reporter, clinicalEntries, 
     abcRecord, adoptions, cases, usages, 
     medicine, user, ...rest 
   } = data;
