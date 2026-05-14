@@ -17,7 +17,9 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const staff = await prisma.staffMember.create({ data: sanitizeData(req.body) });
+    const data = sanitizeData(req.body);
+    if (data.salary) data.salary = parseFloat(data.salary);
+    const staff = await prisma.staffMember.create({ data });
     res.status(201).json(staff);
   } catch (error) {
     sendError(res, error, 'Failed to create staff member');
@@ -26,9 +28,11 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
+    const data = sanitizeData(req.body);
+    if (data.salary) data.salary = parseFloat(data.salary);
     const staff = await prisma.staffMember.update({
       where: { id: req.params.id },
-      data: sanitizeData(req.body)
+      data
     });
     res.json(staff);
   } catch (error) {

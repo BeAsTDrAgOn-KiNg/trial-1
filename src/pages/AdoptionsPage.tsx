@@ -22,21 +22,29 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { AdoptionApplication } from '../types';
 
-const UnderlineInput = ({ label, value, onChange, placeholder, width = "full", type = "text", disabled = false }: any) => (
-  <div className={`flex items-baseline gap-2 ${width === "full" ? "w-full" : ""}`}>
-    {label && <span className="text-slate-800 font-bold text-[13px] whitespace-nowrap uppercase tracking-tight">{label} :</span>}
-    <div className="flex-1 relative">
-      <input 
-        type={type}
-        disabled={disabled}
-        className={`w-full bg-transparent border-b border-slate-400 focus:border-[#005F54] focus:outline-none py-1 px-2 text-sm font-bold text-[#1e40af] placeholder:text-slate-200 ${disabled ? 'cursor-default' : ''}`}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-      />
+const UnderlineInput = ({ label, value, onChange, placeholder, width = "full", type = "text", disabled = false }: any) => {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  
+  return (
+    <div 
+      className={`flex items-baseline gap-2 cursor-text ${width === "full" ? "w-full" : ""}`}
+      onClick={() => inputRef.current?.focus()}
+    >
+      {label && <span className="text-slate-800 font-bold text-[13px] whitespace-nowrap uppercase tracking-tight">{label} :</span>}
+      <div className="flex-1 relative">
+        <input 
+          ref={inputRef}
+          type={type}
+          disabled={disabled}
+          className={`w-full bg-transparent border-b border-slate-400 focus:border-[#005F54] focus:outline-none py-1 px-2 text-sm font-bold text-[#1e40af] placeholder:text-slate-200 ${disabled ? 'cursor-default' : ''}`}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AdoptionsPage: React.FC = () => {
   const { adoptionApplications, addAdoptionApplication, updateAdoptionApplication, isLoading } = useAppContext();

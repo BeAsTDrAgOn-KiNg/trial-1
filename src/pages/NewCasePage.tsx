@@ -513,8 +513,11 @@ const NewCasePage: React.FC = () => {
                     value={formData.age}
                     onChange={e => setFormData({...formData, age: e.target.value})}
                   >
-                    <option>Kitten/Puppy</option>
-                    <option>Young</option>
+                    {formData.animalType === 'Dog' && <option>Puppy</option>}
+                    {formData.animalType === 'Cat' && <option>Kitten</option>}
+                    {formData.animalType === 'Cow' && <option>Calf</option>}
+                    {(formData.animalType !== 'Dog' && formData.animalType !== 'Cat' && formData.animalType !== 'Cow') && <option>Young</option>}
+                    <option>Young Adult</option>
                     <option>Adult</option>
                     <option>Senior</option>
                     <option>Unknown</option>
@@ -525,7 +528,7 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
                 <div className="flex gap-2">
-                  {['Male', 'Female'].map(g => (
+                  {['Male', 'Female', 'Unknown'].map(g => (
                     <button 
                       key={g}
                       type="button"

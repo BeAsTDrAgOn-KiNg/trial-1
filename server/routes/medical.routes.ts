@@ -32,6 +32,18 @@ router.delete('/clinical-entries/:id', async (req, res) => {
   }
 });
 
+router.patch('/clinical-entries/:id', async (req, res) => {
+  try {
+    const entry = await prisma.clinicalEntry.update({
+      where: { id: req.params.id },
+      data: sanitizeData(req.body)
+    });
+    res.json(entry);
+  } catch (error) {
+    sendError(res, error, 'Failed to update clinical entry');
+  }
+});
+
 // --- Medicine Usage ---
 router.get('/medicine-usages', async (req, res) => {
   try {

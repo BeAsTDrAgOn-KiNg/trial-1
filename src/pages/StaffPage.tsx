@@ -43,6 +43,7 @@ const StaffPage: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    type: 'Staff',
     role: 'Staff',
     phone: '',
     joinedDate: new Date().toISOString().split('T')[0],
@@ -71,7 +72,19 @@ const StaffPage: React.FC = () => {
 
   const openRegisterModal = () => {
     setIsEditMode(false);
-    resetForm();
+    setFormData({
+      name: '',
+      type: 'Staff',
+      role: 'Staff',
+      phone: '',
+      joinedDate: new Date().toISOString().split('T')[0],
+      bankFullName: '',
+      bankName: '',
+      bankBranch: '',
+      ifscCode: '',
+      accountNumber: '',
+      salary: ''
+    });
     setIsModalOpen(true);
   };
 
@@ -80,6 +93,7 @@ const StaffPage: React.FC = () => {
     setIsEditMode(true);
     setFormData({
       name: member.name,
+      type: member.salary ? 'Employee' : 'Volunteer', // Heuristic for type
       role: member.role,
       phone: member.phone,
       joinedDate: member.joinedDate,
@@ -361,6 +375,26 @@ const StaffPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-10 space-y-12">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1">Type of Member</label>
+                <div className="flex gap-4">
+                  {['Employee', 'Volunteer', 'Doctor/Admin'].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: t, role: t === 'Volunteer' ? 'Volunteer' : formData.role })}
+                      className={`flex-1 py-4 px-6 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                        formData.type === t 
+                          ? 'bg-[#005F54] text-white border-[#005F54] shadow-lg' 
+                          : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* PERSONAL DETAILS */}
               <div className="space-y-8">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
@@ -411,8 +445,8 @@ const StaffPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* FINANCIAL DETAILS - ONLY FOR EMPLOYEE & STAFF */}
-              {(formData.type === 'Employee' || formData.type === 'Staff') && (
+              {/* FINANCIAL DETAILS - ONLY FOR EMPLOYEE & DOCTOR/ADMIN */}
+              {(formData.type === 'Employee' || formData.type === 'Doctor/Admin') && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   <div className="flex items-center gap-3 border-b border-slate-100 pb-2">
                      <Banknote className="text-[#005F54]" size={20} />

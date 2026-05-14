@@ -294,6 +294,7 @@ const App: React.FC = () => {
                     <Route path="/cases/new" element={<NewCasePage />} />
                     <Route path="/cases/:caseId/edit" element={<EditCasePage />} />
                     <Route path="/cases/:caseId/clinical/new" element={<NewClinicalEntryPage />} />
+                    <Route path="/cases/:caseId/clinical/:logId/edit" element={<NewClinicalEntryPage />} />
                     <Route path="/abc" element={<ABCPage />} />
                     <Route path="/inventory" element={<InventoryPage user={user} />} />
                     <Route path="/inventory/new" element={<NewMedicinePage />} />

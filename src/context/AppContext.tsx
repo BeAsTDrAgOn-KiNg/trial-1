@@ -42,8 +42,9 @@ interface AppContextType {
   addAnimal: (animal: Animal) => void;
   updateAnimal: (animal: Animal) => void;
   addCase: (newCase: Case) => void;
-  updateCase: (updatedCase: Case) => void;
+  updateCase: (updatedCase: Case) => Promise<void>;
   addClinicalEntry: (entry: ClinicalEntry) => void;
+  updateClinicalEntry: (entry: ClinicalEntry) => void;
   addWildlifeCase: (newCase: WildlifeCase) => void;
   addDeclaration: (record: Declaration) => void;
   updateDeclaration: (record: Declaration) => void;
@@ -233,6 +234,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }, 'Entry captured', (saved) => setClinicalEntries(prev => [saved, ...prev]));
+  };
+
+  const updateClinicalEntry = async (entry: ClinicalEntry) => {
+    await handleRequest(`/api/clinical-entries/${entry.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    }, 'Entry updated', (saved) => setClinicalEntries(prev => prev.map(c => c.id === saved.id ? saved : c)));
   };
 
   const deleteClinicalEntry = async (id: string) => {
@@ -470,6 +479,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addCase,
       updateCase,
       addClinicalEntry,
+      updateClinicalEntry,
       addWildlifeCase,
       addDeclaration,
       updateDeclaration,

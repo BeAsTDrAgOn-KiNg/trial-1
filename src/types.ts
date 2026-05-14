@@ -90,7 +90,10 @@ export interface WildlifeCase {
 
 export interface ABCRecord {
   id: string;
-  animalId: string;
+  animalId?: string;
+  maleCount?: number;
+  femaleCount?: number;
+  area?: string;
   sterilized: boolean;
   vaccinationDone: boolean;
   surgeryDate: string;
@@ -102,6 +105,8 @@ export interface AdoptionApplication {
   id: string;
   appNumber: string;
   adopterName: string;
+  adopterAge: string;
+  adopterGender: string;
   address: string;
   phone: string;
   email: string;
@@ -148,6 +153,7 @@ export interface Donation {
   id: string;
   donorName: string;
   amount: number;
+  date?: string;
   message?: string;
   paymentId?: string;
   createdAt?: string;

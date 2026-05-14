@@ -31,6 +31,9 @@ const ABCPage: React.FC = () => {
 
   const [formData, setFormData] = useState({
     animalId: '',
+    maleCount: '',
+    femaleCount: '',
+    area: '',
     sterilized: true,
     vaccinationDone: true,
     surgeryDate: new Date().toISOString().split('T')[0],
@@ -41,6 +44,9 @@ const ABCPage: React.FC = () => {
     setEditingId(null);
     setFormData({
       animalId: animals[0]?.id || '',
+      maleCount: '',
+      femaleCount: '',
+      area: '',
       sterilized: true,
       vaccinationDone: true,
       surgeryDate: new Date().toISOString().split('T')[0],
@@ -53,6 +59,9 @@ const ABCPage: React.FC = () => {
     setEditingId(record.id);
     setFormData({
       animalId: record.animalId || '',
+      maleCount: record.maleCount?.toString() || '',
+      femaleCount: record.femaleCount?.toString() || '',
+      area: record.area || '',
       sterilized: record.sterilized,
       vaccinationDone: record.vaccinationDone,
       surgeryDate: record.surgeryDate,
@@ -64,20 +73,26 @@ const ABCPage: React.FC = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.animalId) {
-      alert("Please select an Animal.");
+    const preparedData = {
+      ...formData,
+      maleCount: formData.maleCount ? parseInt(formData.maleCount) : undefined,
+      femaleCount: formData.femaleCount ? parseInt(formData.femaleCount) : undefined,
+    };
+
+    if (!formData.animalId && !formData.maleCount && !formData.femaleCount) {
+      alert("Please select an Animal or enter male/female counts.");
       return;
     }
 
     if (editingId) {
-      updateABCRecord({ ...formData, id: editingId } as ABCRecord);
+      updateABCRecord({ ...preparedData, id: editingId } as ABCRecord);
       alert("Surgery record updated.");
     } else {
       const newRecord: ABCRecord = {
         id: `abc-${Date.now()}`,
-        ...formData,
+        ...preparedData,
         createdAt: new Date().toISOString()
-      };
+      } as ABCRecord;
       addABCRecord(newRecord);
       alert("New entry successfully saved.");
     }
@@ -194,7 +209,8 @@ const ABCPage: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
                   <tr>
-                    <th className="px-10 py-6">Animal</th>
+                    <th className="px-10 py-6">Animal / Area</th>
+                    <th className="px-10 py-6 text-center">Counts</th>
                     <th className="px-10 py-6 text-center">Date</th>
                     <th className="px-10 py-6 text-center">Sterilized</th>
                     <th className="px-10 py-6 text-center">Vaccinated</th>
@@ -210,13 +226,23 @@ const ABCPage: React.FC = () => {
                         <td className="px-10 py-6">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#005F54] flex items-center justify-center font-black shadow-sm group-hover:bg-[#005F54] group-hover:text-white transition-all">
-                              {animal?.species.charAt(0) || '?'}
+                              {animal?.species.charAt(0) || <MapPin size={18} />}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-base font-black text-slate-800 tracking-tight">{animal?.name || 'Unknown'}</span>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">{animal?.species || 'N/A'}</span>
+                              <span className="text-base font-black text-slate-800 tracking-tight">{animal?.name || r.area || 'Unknown'}</span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">{animal?.species || 'Batch Program'}</span>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-10 py-6 text-center">
+                          {r.maleCount || r.femaleCount ? (
+                            <div className="flex flex-col text-[10px] font-black">
+                              {r.maleCount && <span className="text-blue-600">M: {r.maleCount}</span>}
+                              {r.femaleCount && <span className="text-rose-600">F: {r.femaleCount}</span>}
+                            </div>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
                         </td>
                         <td className="px-10 py-6 text-sm font-bold text-slate-500 text-center">{r.surgeryDate}</td>
                         <td className="px-10 py-6 text-center">
@@ -333,19 +359,54 @@ const ABCPage: React.FC = () => {
 
             <form onSubmit={handleFormSubmit} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto">
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Animal</label>
-                  <div className="relative">
-                    <select 
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] appearance-none cursor-pointer transition-all"
-                      value={formData.animalId}
-                      onChange={e => setFormData({...formData, animalId: e.target.value})}
-                    >
-                      {animals.map(a => (
-                        <option key={a.id} value={a.id}>{a.name} ({a.species})</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Individual Animal (Optional)</label>
+                    <div className="relative">
+                      <select 
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] appearance-none cursor-pointer transition-all"
+                        value={formData.animalId}
+                        onChange={e => setFormData({...formData, animalId: e.target.value})}
+                      >
+                        <option value="">None / Multiple</option>
+                        {animals.map(a => (
+                          <option key={a.id} value={a.id}>{a.name} ({a.species})</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Area / Location</label>
+                    <input 
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
+                      placeholder="e.g. Alanahalli"
+                      value={formData.area}
+                      onChange={e => setFormData({...formData, area: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-1">Male Count</label>
+                    <input 
+                      type="number"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
+                      placeholder="0"
+                      value={formData.maleCount}
+                      onChange={e => setFormData({...formData, maleCount: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest ml-1">Female Count</label>
+                    <input 
+                      type="number"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
+                      placeholder="0"
+                      value={formData.femaleCount}
+                      onChange={e => setFormData({...formData, femaleCount: e.target.value})}
+                    />
                   </div>
                 </div>
 

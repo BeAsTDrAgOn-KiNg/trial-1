@@ -113,6 +113,8 @@ export const INITIAL_ADOPTION_APPLICATIONS: AdoptionApplication[] = [
     date: '2024-05-15',
     time: '10:30',
     reason: 'Loves dogs, has a large fenced backyard.',
+    adopterAge: '32',
+    adopterGender: 'Male'
   }
 ];
 

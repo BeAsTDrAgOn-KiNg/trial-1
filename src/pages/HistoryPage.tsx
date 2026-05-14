@@ -42,7 +42,7 @@ const HistoryPage: React.FC = () => {
       setUploadedImage(base64Data);
       
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
         const base64Content = base64Data.split(',')[1];
 
         const response = await ai.models.generateContent({
