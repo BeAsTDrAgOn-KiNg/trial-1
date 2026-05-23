@@ -4,7 +4,7 @@ import express from 'express';
 import app from './server/app';
 
 async function startServer() {
-  const PORT = 3000;
+  const PORT = 8080;
 
   // --- Vite / Static Middleware setup ---
   if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
