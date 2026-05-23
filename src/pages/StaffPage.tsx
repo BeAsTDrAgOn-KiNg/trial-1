@@ -32,7 +32,13 @@ import { useAppContext } from '../context/AppContext';
 import { StaffMember } from '../types';
 
 const StaffPage: React.FC = () => {
-  const { staff, addStaff, updateStaff, isLoading } = useAppContext();
+  const { 
+  staff, 
+  addStaff, 
+  updateStaff, 
+  deleteStaff,
+  isLoading 
+} = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -108,14 +114,15 @@ const StaffPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = () => {
-    if (selectedStaff) {
-      setIsDeleteConfirmOpen(false);
-      setIsDetailOpen(false);
-      setSelectedStaff(null);
-      alert("Staff deletion is not implemented in this demo context.");
-    }
-  };
+  const handleDelete = async () => {
+  if (!selectedStaff) return;
+
+  await deleteStaff(selectedStaff.id);
+
+  setIsDeleteConfirmOpen(false);
+  setIsDetailOpen(false);
+  setSelectedStaff(null);
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

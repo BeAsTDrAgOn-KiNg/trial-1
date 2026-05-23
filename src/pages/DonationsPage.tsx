@@ -334,6 +334,7 @@ const DonationsPage: React.FC = () => {
                     <CreditCard size={12} /> Payment ID / Reference
                   </label>
                   <input 
+                  required
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none shadow-sm" 
                     value={newEntry.paymentId} 
                     onChange={e => setNewEntry({...newEntry, paymentId: e.target.value})} 

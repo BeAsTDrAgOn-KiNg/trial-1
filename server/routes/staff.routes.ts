@@ -18,8 +18,15 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const data = sanitizeData(req.body);
-    if (data.salary) data.salary = parseFloat(data.salary);
+
+    if (data.salary && data.salary !== '') {
+      data.salary = parseFloat(data.salary);
+    } else {
+      data.salary = null;
+    }
+
     const staff = await prisma.staffMember.create({ data });
+
     res.status(201).json(staff);
   } catch (error) {
     sendError(res, error, 'Failed to create staff member');
@@ -29,11 +36,18 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const data = sanitizeData(req.body);
-    if (data.salary) data.salary = parseFloat(data.salary);
+
+    if (data.salary && data.salary !== '') {
+      data.salary = parseFloat(data.salary);
+    } else {
+      data.salary = null;
+    }
+
     const staff = await prisma.staffMember.update({
       where: { id: req.params.id },
       data
     });
+
     res.json(staff);
   } catch (error) {
     sendError(res, error, 'Failed to update staff member');
@@ -42,7 +56,10 @@ router.patch('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    await prisma.staffMember.delete({ where: { id: req.params.id } });
+    await prisma.staffMember.delete({
+      where: { id: req.params.id }
+    });
+
     res.status(204).send();
   } catch (error) {
     sendError(res, error, 'Failed to delete staff member');

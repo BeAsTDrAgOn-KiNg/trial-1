@@ -17,10 +17,12 @@ import donationRoutes from './routes/donation.routes';
 import adoptionRoutes from './routes/adoption.routes';
 import declarationRoutes from './routes/declaration.routes';
 import userRoutes from './routes/user.routes';
+import adminRoutes from './routes/admin.routes';
 import createMiscRouter from './routes/misc.routes';
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -39,11 +41,18 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
   },
+
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const uniqueSuffix =
+      Date.now() + '-' + Math.round(Math.random() * 1e9);
+
+    cb(
+      null,
+      uniqueSuffix + path.extname(file.originalname)
+    );
   }
 });
+
 const upload = multer({ storage });
 
 // --- API Routes ---
@@ -58,6 +67,11 @@ app.use('/api/donations', donationRoutes);
 app.use('/api/adoptions', adoptionRoutes);
 app.use('/api/declarations', declarationRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+
+// ADMIN ROUTES
+app.use('/api/admin', adminRoutes);
+
 app.use('/api', createMiscRouter(upload));
 
 export default app;

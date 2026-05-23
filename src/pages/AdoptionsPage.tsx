@@ -74,27 +74,65 @@ const AdoptionsPage: React.FC = () => {
   });
 
   const handleFinalize = () => {
-    const newRecord: AdoptionApplication = {
-      id: `APP-${Date.now().toString().slice(-4)}`,
-      ...formData,
-      status: 'In Review',
-      createdAt: new Date().toISOString()
-    };
-    addAdoptionApplication(newRecord);
-    alert("Adoption Application successfully registered.");
-    setView('summary');
-    setFormStep(1);
-    setFormData({
-      appNumber: `2024-${adoptionApplications.length + 234}`,
-      adopterName: '', adopterAge: '', adopterGender: 'Male', phone: '', email: '',
-      animalType: 'Dog', targetGender: 'Male', targetColor: '',
-      reason: '', address: '', description: '', 
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-      location: 'Main Sanctuary'
-    });
+  const requiredFields = [
+    formData.adopterName,
+    formData.adopterAge,
+    formData.phone,
+    formData.email,
+    formData.address,
+    formData.animalType,
+    formData.targetColor,
+    formData.reason,
+    formData.date,
+    formData.time,
+    formData.location
+  ];
+
+  const isEmpty = requiredFields.some(
+    field => !field || field.toString().trim() === ''
+  );
+
+  if (isEmpty) {
+    alert("Please complete all fields.");
+    return;
+  }
+
+  const newRecord: AdoptionApplication = {
+    id: `APP-${Date.now().toString().slice(-4)}`,
+    ...formData,
+    status: 'In Review',
+    createdAt: new Date().toISOString()
   };
 
+  addAdoptionApplication(newRecord);
+
+  alert("Adoption Application successfully registered.");
+
+  setView('summary');
+  setFormStep(1);
+
+  setFormData({
+    appNumber: `2024-${adoptionApplications.length + 234}`,
+    adopterName: '',
+    adopterAge: '',
+    adopterGender: 'Male',
+    phone: '',
+    email: '',
+    animalType: 'Dog',
+    targetGender: 'Male',
+    targetColor: '',
+    reason: '',
+    address: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+    time: new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }),
+    location: 'Main Sanctuary'
+  });
+};
   const filteredRecords = useMemo(() => {
     return adoptionApplications.filter(r => {
       return r.adopterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,9 +207,34 @@ const AdoptionsPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          <UnderlineInput disabled={isPreview} label="Mobile No" value={data.phone} onChange={(e: any) => onDataChange ? onDataChange({...data, phone: e.target.value}) : setFormData({...formData, phone: e.target.value})} placeholder="91..." />
-          <UnderlineInput disabled={isPreview} label="Email" value={data.email} onChange={(e: any) => onDataChange ? onDataChange({...data, email: e.target.value}) : setFormData({...formData, email: e.target.value})} placeholder="email@address.com" />
-        </div>
+<UnderlineInput 
+  disabled={isPreview} 
+  label="Mobile No" 
+  value={data.phone} 
+  onChange={(e: any) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+
+    onDataChange
+      ? onDataChange({ ...data, phone: value })
+      : setFormData({ ...formData, phone: value });
+  }}
+  placeholder="10 digit mobile number"
+  type="tel"
+/>          
+<UnderlineInput
+  disabled={isPreview}
+  label="Email"
+  value={data.email}
+  onChange={(e: any) => {
+    const value = e.target.value.replace(/\s/g, '');
+
+    onDataChange
+      ? onDataChange({ ...data, email: value })
+      : setFormData({ ...formData, email: value });
+  }}
+  placeholder="email@address.com"
+  type="email"
+/>        </div>
 
         <UnderlineInput disabled={isPreview} label="Home Address" value={data.address} onChange={(e: any) => onDataChange ? onDataChange({...data, address: e.target.value}) : setFormData({...formData, address: e.target.value})} placeholder="Street, Colony, Landmark" />
 
@@ -282,7 +345,38 @@ const AdoptionsPage: React.FC = () => {
              <div className="space-y-6">
                <FormContent data={formData} />
                <div className="flex justify-end pt-12 no-print">
-                  <button onClick={() => setFormStep(2)} className="flex items-center gap-3 bg-[#005F54] text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:brightness-110 active:scale-95 transition-all">
+                  <button onClick={() => {
+  const requiredFields = [
+    formData.adopterName,
+    formData.adopterAge,
+    formData.phone,
+    formData.email,
+    formData.address,
+    formData.animalType,
+    formData.targetColor,
+    formData.reason,
+  ];
+
+  const isEmpty = requiredFields.some(
+    field => !field || field.toString().trim() === ''
+  );
+if (formData.phone.length !== 10) {
+  alert("Phone number must be exactly 10 digits.");
+  return;
+}
+
+  if (isEmpty) {
+    alert('Please fill all fields before continuing.');
+    return;
+  }
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailRegex.test(formData.email)) {
+  alert("Please enter a valid email address.");
+  return;
+}
+  setFormStep(2);
+}} className="flex items-center gap-3 bg-[#005F54] text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:brightness-110 active:scale-95 transition-all">
                     Next Step <ArrowRight size={20} />
                   </button>
                </div>

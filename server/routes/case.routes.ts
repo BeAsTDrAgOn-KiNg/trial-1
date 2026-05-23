@@ -3,7 +3,9 @@ import { prisma } from '../db';
 import { sendError, sanitizeData } from '../utils';
 
 const router = Router();
-
+const isAdmin = (req: any) => {
+  return req.headers.role === 'ADMIN';
+};
 // --- Cases with Pagination & Filtering ---
 router.get('/', async (req, res) => {
   try {
@@ -69,6 +71,14 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/export', async (req, res) => {
+
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      error: 'Access denied. Admins only.'
+    });
+  }
+
+
   try {
     const cases = await prisma.case.findMany({
       include: { reporter: true, clinicalEntries: true },
@@ -81,6 +91,12 @@ router.get('/export', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      error: 'Access denied. Admins only.'
+    });
+  }
   try {
     const caseItem = await prisma.case.findUnique({
       where: { id: req.params.id },
@@ -98,14 +114,29 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const newCase = await prisma.case.create({ data: sanitizeData(req.body) });
+
+    console.log("BODY:", req.body);
+
+    const newCase = await prisma.case.create({
+      data: sanitizeData(req.body)
+    });
+
     res.status(201).json(newCase);
+
   } catch (error) {
+    console.error(error);
     sendError(res, error, 'Failed to create case');
   }
 });
 
 router.patch('/:id', async (req, res) => {
+
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      error: 'Access denied. Admins only.'
+    });
+  }
+
   try {
     const updatedCase = await prisma.case.update({
       where: { id: req.params.id },
@@ -118,6 +149,13 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      error: 'Access denied. Admins only.'
+    });
+  }
+
   try {
     await prisma.case.delete({ where: { id: req.params.id } });
     res.status(204).send();

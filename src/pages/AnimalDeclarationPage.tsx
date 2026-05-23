@@ -43,6 +43,7 @@ const AnimalDeclarationPage: React.FC = () => {
     gender: 'Male',
     age: '',
     description: '',
+    signature: '',
     date: new Date().toISOString().split('T')[0],
     agreed: false,
     needsTreatment: null as boolean | null
@@ -61,6 +62,7 @@ const AnimalDeclarationPage: React.FC = () => {
       gender: record.gender,
       age: record.age,
       description: record.description,
+      signature: '',
       date: record.date,
       agreed: true,
       needsTreatment: null
@@ -68,7 +70,19 @@ const AnimalDeclarationPage: React.FC = () => {
     setEditingId(record.id);
     setView('form');
   };
-
+const isFormValid =
+  formData.formNo.trim() !== '' &&
+  formData.declarerName.trim() !== '' &&
+  formData.address.trim() !== '' &&
+  formData.phone.trim().length === 10 &&
+  formData.email.trim() !== '' &&
+  formData.species.trim() !== '' &&
+  formData.gender.trim() !== '' &&
+  formData.age.trim() !== '' &&
+  formData.description.trim() !== '' &&
+formData.signature.trim() !== '' &&
+  formData.needsTreatment !== null &&
+  formData.agreed;
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.phone.length !== 10) {
@@ -196,12 +210,22 @@ const AnimalDeclarationPage: React.FC = () => {
                 <div className="space-y-4">
                    <div className="space-y-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Form Number</label>
-                     <input 
-                       placeholder="e.g., FORM-1234" 
-                       className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
-                       value={formData.formNo}
-                       onChange={e => setFormData({...formData, formNo: e.target.value})}
-                     />
+                     <input
+  required
+  type="text"
+  inputMode="text"
+  pattern="[A-Za-z0-9-]+"
+  title="Only letters, numbers, and hyphens are allowed"
+  placeholder="e.g., FORM-1234"
+  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
+  value={formData.formNo}
+  onChange={e =>
+    setFormData({
+      ...formData,
+      formNo: e.target.value
+    })
+  }
+/>
                    </div>
                    <div className="space-y-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
@@ -241,6 +265,7 @@ const AnimalDeclarationPage: React.FC = () => {
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
                         <input 
+                        required
                           type="email"
                           placeholder="email@example.com" 
                           className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
@@ -287,6 +312,7 @@ const AnimalDeclarationPage: React.FC = () => {
                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Age</label>
                       <input 
+                      required
                         placeholder="e.g. 1 Year" 
                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
                         value={formData.age}
@@ -297,6 +323,7 @@ const AnimalDeclarationPage: React.FC = () => {
                 <div className="space-y-2">
                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
                    <textarea 
+                   required
                      rows={3}
                      placeholder="Color, breed markings, visible injuries, etc..." 
                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
@@ -376,11 +403,19 @@ const AnimalDeclarationPage: React.FC = () => {
                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-4 italic">Digitally Stamp your Signature</p>
                      <div className="relative group">
                         <div className="absolute inset-0 bg-slate-50 rounded-2xl group-hover:bg-slate-100 transition-colors"></div>
-                        <input 
-                          type="text" 
-                          placeholder="Type Name to Sign" 
-                          className="relative w-full px-6 py-8 bg-transparent border-b-2 border-slate-300 focus:border-[#005F54] outline-none text-2xl font-['Georgia'] italic text-[#1e40af]"
-                        />
+                        <input
+  required
+  type="text"
+  placeholder="Type Name to Sign"
+  value={formData.signature}
+  onChange={e =>
+    setFormData({
+      ...formData,
+      signature: e.target.value
+    })
+  }
+  className="relative w-full px-6 py-8 bg-transparent border-b-2 border-slate-300 focus:border-[#005F54] outline-none text-2xl font-['Georgia'] italic text-[#1e40af]"
+/>
                         <div className="absolute right-4 bottom-4 pointer-events-none opacity-20">
                           <FileSignature size={48} />
                         </div>
@@ -399,14 +434,24 @@ const AnimalDeclarationPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col md:flex-row items-end justify-center pt-10 gap-6">
-                 <button 
-                   type="submit" 
-                   className="w-full md:w-auto px-12 py-6 bg-[#005F54] text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-emerald-900/30 hover:bg-[#004a42] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-                 >
-                   <Save size={20} />
-                   {formData.needsTreatment ? 'Commit & Proceed to Treatment' : (editingId ? 'Update Record' : 'Commit & Archive')}
-                 </button>
-              </div>
+  <button
+    type="submit"
+    disabled={!isFormValid}
+    className={`w-full md:w-auto px-12 py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98]
+    ${
+      isFormValid
+        ? 'bg-[#005F54] text-white shadow-emerald-900/30 hover:bg-[#004a42] cursor-pointer'
+        : 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+    }`}
+  >
+    <Save size={20} />
+    {formData.needsTreatment
+      ? 'Commit & Proceed to Treatment'
+      : editingId
+      ? 'Update Record'
+      : 'Commit & Archive'}
+  </button>
+</div>
             </form>
           </div>
         </div>

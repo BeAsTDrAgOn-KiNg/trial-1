@@ -452,8 +452,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteStaff = async (id: string) => {
-    await handleRequest(`/api/staff/${id}`, { method: 'DELETE' }, 'Staff removed', () => setStaff(prev => prev.filter(s => s.id !== id)));
-  };
+  await handleRequest(
+    `/api/staff/${id}`,
+    { method: 'DELETE' },
+    'Staff removed',
+    () => setStaff(prev => prev.filter(s => s.id !== id))
+  );
+};
 
   return (
     <AppContext.Provider value={{

@@ -152,62 +152,153 @@ const NewCasePage: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
-
+const isFormValid =
+  formData.caseNumber.trim() !== '' &&
+  formData.rescueArea.trim() !== '' &&
+  formData.detailedAddress.trim() !== '' &&
+  formData.compName.trim() !== '' &&
+  /^[0-9]\d{9}$/.test(formData.compPhone.trim()) &&
+  formData.compAddress.trim() !== '' &&
+  formData.animalType.trim() !== '' &&
+  (formData.animalType !== 'Other' ||
+    formData.customAnimalType.trim() !== '') &&
+  formData.age.trim() !== '' &&
+  formData.gender.trim() !== '' &&
+  formData.description.trim() !== '' &&
+  selectedImage !== null;
   const handleFinalize = async () => {
-    if (!formData.caseNumber.trim()) {
-      alert("Please enter a Case Number.");
-      return;
-    }
+  // Trimmed values
+  const trimmedCaseNumber = formData.caseNumber.trim();
+  const trimmedDetailedAddress = formData.detailedAddress.trim();
+  const trimmedCompName = formData.compName.trim();
+  const trimmedCompPhone = formData.compPhone.trim();
+  const trimmedCompAddress = formData.compAddress.trim();
+  const trimmedDescription = formData.description.trim();
+  const trimmedCustomAnimalType = formData.customAnimalType.trim();
 
-    if (!formData.rescueArea) {
-      alert("Please select a Rescue Area.");
-      return;
-    }
+  // Mandatory validations
+  if (!trimmedCaseNumber) {
+    alert("Case Number is required.");
+    return;
+  }
 
-    if (formData.compPhone && formData.compPhone.length !== 10) {
-      alert("Reporter phone number must be exactly 10 digits.");
-      return;
-    }
+  if (!formData.rescueArea) {
+    alert("Please select a Rescue Area.");
+    return;
+  }
 
-    const finalAnimalType = formData.animalType === 'Other' ? (formData.customAnimalType || 'Other') : formData.animalType;
-    const combinedLocation = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
+  if (!trimmedDetailedAddress) {
+    alert("Detailed Address / Landmark is required.");
+    return;
+  }
 
-    let finalImageUrl = selectedImage || undefined;
+  if (!trimmedCompName) {
+    alert("Reporter Name is required.");
+    return;
+  }
 
-    // Simulation Upload Logic
-    if (selectedImage && selectedImage.startsWith('data:')) {
-      try {
-        const file = base64ToFile(selectedImage, `${formData.caseNumber}-${Date.now()}.jpg`);
-        const uploadedUrl = await uploadFile(file);
-        if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
-        }
-      } catch (error) {
-        console.error('Simulation upload failed:', error);
-      }
-    }
+  if (!trimmedCompPhone) {
+    alert("Reporter Phone Number is required.");
+    return;
+  }
 
-    // Get current user from local session
-    const savedUser = localStorage.getItem('pfa_user_session');
-    const user = savedUser ? JSON.parse(savedUser) : null;
+  if (trimmedCompPhone.length !== 10) {
+    alert("Reporter phone number must be exactly 10 digits.");
+    return;
+  }
 
-      const newCase: Case = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: `${finalAnimalType} Rescue - ${formData.caseNumber}`,
-        location: combinedLocation,
-        description: `Age: ${formData.age}\nGender: ${formData.gender}\n\n${formData.description || 'No detailed assessment provided.'}\n\nReporter: ${formData.compName || 'Anonymous'} (${formData.compPhone || 'N/A'})\nReporter Address: ${formData.compAddress || 'N/A'}`,
-        status: CaseStatus.UNDER_TREATMENT,
-        reportedById: user?.id,
-        imageUrl: finalImageUrl,
-        createdAt: new Date().toISOString()
-      };
+  if (!trimmedCompAddress) {
+    alert("Reporter Address is required.");
+    return;
+  }
 
+  if (!formData.animalType) {
+    alert("Animal Category is required.");
+    return;
+  }
 
-    addCase(newCase);
-    
-    alert(`Case ${formData.caseNumber} has been successfully registered.`);
-    navigate('/cases');
+  if (formData.animalType === 'Other' && !trimmedCustomAnimalType) {
+    alert("Please specify the animal type.");
+    return;
+  }
+
+  if (!formData.age) {
+    alert("Animal Age is required.");
+    return;
+  }
+
+  if (!formData.gender) {
+    alert("Animal Gender is required.");
+    return;
+  }
+
+  if (!trimmedDescription) {
+    alert("Description / Look is required.");
+    return;
+  }
+
+  if (!selectedImage) {
+    alert("Identification Photo is required.");
+    return;
   };
+
+  const finalAnimalType =
+    formData.animalType === 'Other'
+      ? trimmedCustomAnimalType
+      : formData.animalType;
+
+  const combinedLocation = `${formData.rescueArea}${
+    trimmedDetailedAddress ? `, ${trimmedDetailedAddress}` : ''
+  }`;
+
+  let finalImageUrl = selectedImage || undefined;
+
+  // Simulation Upload Logic
+  if (selectedImage && selectedImage.startsWith('data:')) {
+    try {
+      const file = base64ToFile(
+        selectedImage,
+        `${formData.caseNumber}-${Date.now()}.jpg`
+      );
+
+      const uploadedUrl = await uploadFile(file);
+
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+      }
+    } catch (error) {
+      console.error('Simulation upload failed:', error);
+    }
+  };
+
+  // Get current user from local session
+  const savedUser = localStorage.getItem('pfa_user_session');
+  const user = savedUser ? JSON.parse(savedUser) : null;
+
+  const newCase: Case = {
+    id: Math.random().toString(36).substr(2, 9),
+    title: `${finalAnimalType} Rescue - ${trimmedCaseNumber}`,
+    location: combinedLocation,
+    description: `Age: ${formData.age}
+Gender: ${formData.gender}
+
+${trimmedDescription}
+
+Reporter: ${trimmedCompName} (${trimmedCompPhone})
+Reporter Address: ${trimmedCompAddress}`,
+
+    status: CaseStatus.UNDER_TREATMENT,
+    // reportedById: user?.id,
+    imageUrl: finalImageUrl,
+    createdAt: new Date().toISOString()
+  };
+
+  addCase(newCase);
+
+  alert(`Case ${trimmedCaseNumber} has been successfully registered.`);
+  navigate('/cases');
+}
+    
 
   if (isLoading) {
     return (
@@ -314,8 +405,9 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2">
                 <label htmlFor="caseNumber" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Case Number *</label>
                 <input 
+                required
                   id="caseNumber"
-                  required
+                  
                   placeholder="Enter Case ID..."
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black placeholder:text-slate-300"
                   value={formData.caseNumber}
@@ -337,6 +429,7 @@ const NewCasePage: React.FC = () => {
                       <Search size={16} />
                    </div>
                    <input 
+                   required
                      id="rescueArea"
                      type="text"
                      placeholder="Search or select area..."
@@ -381,6 +474,7 @@ const NewCasePage: React.FC = () => {
                     </div>
                     <div className="flex gap-2">
                        <input 
+                       required
                          autoFocus
                          placeholder="Type new area name..."
                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] outline-none"
@@ -403,6 +497,7 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Detailed Address / Landmark</label>
                 <input 
+                required
                   type="text"
                   placeholder="Street No, Door No, Landmark..."
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black placeholder:text-slate-300"
@@ -430,6 +525,7 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reporter Name</label>
                 <input 
+                required
                   type="text" 
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black"
                   value={formData.compName}
@@ -439,6 +535,7 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2">
                 <label htmlFor="compPhone" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
                 <input 
+                required
                   id="compPhone"
                   type="tel" 
                   minLength={10}
@@ -453,6 +550,7 @@ const NewCasePage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Address Detail</label>
               <textarea 
+              required
                 rows={2}
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black"
                 value={formData.compAddress}
@@ -477,7 +575,8 @@ const NewCasePage: React.FC = () => {
             <div className="space-y-2">
               <label htmlFor="animalType" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Animal Category</label>
               <div className="relative">
-                <select 
+                <select
+                required 
                   id="animalType"
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black appearance-none"
                   value={formData.animalType}
@@ -495,6 +594,7 @@ const NewCasePage: React.FC = () => {
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Specify Species</label>
                 <input 
+                required
                   type="text" 
                   placeholder="Enter specific animal type..."
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black"
@@ -509,6 +609,7 @@ const NewCasePage: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Estimated Age</label>
                 <div className="relative">
                   <select 
+                  required
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black appearance-none"
                     value={formData.age}
                     onChange={e => setFormData({...formData, age: e.target.value})}
@@ -545,6 +646,7 @@ const NewCasePage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description / Look</label>
               <textarea 
+              required
                 rows={4}
                 placeholder="Markings, scars, color, or initial assessment notes..."
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all text-sm font-bold text-black placeholder:text-slate-300"
@@ -556,6 +658,7 @@ const NewCasePage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identification Photo</label>
               <input 
+              required
                 type="file" 
                 accept="image/*" 
                 className="hidden" 
@@ -595,15 +698,17 @@ const NewCasePage: React.FC = () => {
         </div>
 
         {/* Finalize Action */}
-        <div className="mt-16 pt-8 border-t border-slate-100">
-          <button 
-            onClick={handleFinalize}
-            className="w-full bg-[#005F54] hover:bg-[#004a42] text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.25em] shadow-2xl shadow-emerald-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-          >
-            <Save size={20} />
-            Save Case
-          </button>
-        </div>
+        {isFormValid && (
+  <div className="mt-16 pt-8 border-t border-slate-100 animate-in fade-in duration-300">
+    <button 
+    onClick={handleFinalize}
+      className="w-full bg-[#005F54] hover:bg-[#004a42] text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.25em] shadow-2xl shadow-emerald-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+    >
+      <Save size={20} />
+      Save Case
+    </button>
+  </div>
+)}
 
       </div>
     </div>

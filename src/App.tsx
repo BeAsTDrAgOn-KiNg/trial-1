@@ -27,7 +27,8 @@ import {
   Bird,
   Dna,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  UserLock
 } from 'lucide-react';
 
 import LoginPage from './pages/LoginPage';
@@ -54,6 +55,7 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import { User } from './types';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { NotificationProvider } from './context/NotificationContext';
+import AdminProfilesPage from './pages/AdminProfilesPage';
 
 interface SidebarLinkProps {
   to: string;
@@ -228,6 +230,7 @@ const App: React.FC = () => {
     { to: '/adoptions', icon: PawPrint, label: 'Adoptions', roles: ['Admin'] },
     { to: '/analytics', icon: BarChart3, label: 'Reports', roles: ['Admin', 'Doctor'] },
     { to: '/history-logs', icon: History, label: 'History', roles: ['Admin'] },
+    { to: '/admin', icon: UserLock, label: 'Admin', roles: ['Admin'] },
   ];
 
   const navigation = allNavigation.filter(item => item.roles.includes(user?.role || ''));
@@ -305,6 +308,7 @@ const App: React.FC = () => {
                     <Route path="/reports/census" element={<CensusReportPage />} />
                     <Route path="/history-logs" element={<HistoryPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
+                   <Route path="/admin" element={<AdminProfilesPage />} /> 
                   </Routes>
                 </div>
               </main>

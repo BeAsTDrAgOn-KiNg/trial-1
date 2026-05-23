@@ -28,7 +28,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+if (!emailRegex.test(identifier)) {
+  setError('Please enter a valid email address.');
+  notify('Invalid email format', 'error');
+  setIsLoading(false);
+  return;
+} 
     if (phone.length !== 10) {
       setError("Phone number must be exactly 10 digits.");
       setIsLoading(false);
@@ -70,7 +77,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+if (!emailRegex.test(identifier)) {
+  setError('Please enter a valid email address.');
+  notify('Invalid email format', 'error');
+  setIsLoading(false);
+  return;
+}
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -191,7 +205,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                         >
                           <option value="Admin">Admin</option>
                           <option value="Doctor">Doctor</option>
-                          <option value="Data Entry">Data Entry</option>
+                          <option value="Data Entry
+                          ">Trustee</option>
                         </select>
                         <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
                       </div>
@@ -200,21 +215,46 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-sm font-black text-slate-800 ml-1">
-                    Username / Email
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Username or your.email@example.com"
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#43937c]/20 focus:border-[#43937c] transition-all text-sm font-bold text-black placeholder:text-slate-300"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                    />
-                  </div>
-                </div>
+  <label className="text-sm font-black text-slate-800 ml-1">
+    Email
+  </label>
+
+  <div className="relative">
+    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+
+    <input
+      type="email"
+      required
+      placeholder="your.email@example.com"
+      className={`w-full pl-12 pr-12 py-4 rounded-2xl border bg-white focus:outline-none focus:ring-2 transition-all text-sm font-bold text-black placeholder:text-slate-300 ${
+        identifier.length > 0
+          ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)
+            ? 'border-emerald-300 focus:ring-emerald-200 focus:border-emerald-500'
+            : 'border-rose-300 focus:ring-rose-200 focus:border-rose-500'
+          : 'border-slate-200 focus:ring-[#43937c]/20 focus:border-[#43937c]'
+      }`}
+      value={identifier}
+      onChange={(e) => setIdentifier(e.target.value)}
+    />
+
+    {identifier.length > 0 && (
+      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+        {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) ? (
+          <CheckCircle className="text-emerald-500" size={20} />
+        ) : (
+          <AlertCircle className="text-rose-500" size={20} />
+        )}
+      </div>
+    )}
+  </div>
+
+  {identifier.length > 0 &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) && (
+      <p className="text-xs text-rose-500 font-bold ml-1">
+        Please enter a valid email address
+      </p>
+    )}
+</div>
 
                 {isRegistering && (
                   <div className="space-y-2">

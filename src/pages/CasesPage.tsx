@@ -249,6 +249,7 @@ const DoctorDropdown = ({ value, onChange, placeholder, className = "" }: { valu
       </div>
       {isOther && (
         <input 
+        required
           type="text"
           placeholder="Enter Name Manually"
           className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#005F54]/10 focus:border-[#005F54] animate-in slide-in-from-top-1"
@@ -480,6 +481,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
           <div className="lg:col-span-1 relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
+            required
               type="text" 
               placeholder="Search..." 
               className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#005F54]/10 text-sm font-bold text-slate-700 shadow-inner"
@@ -574,7 +576,19 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {cases.map((c) => (
-                <tr key={c.id} onClick={() => setSelectedCase(c)} className="group cursor-pointer hover:bg-emerald-50/10 transition-colors">
+                <tr
+  key={c.id}
+  onClick={() => {
+    if (user?.role?.toUpperCase() === 'ADMIN') {
+      setSelectedCase(c);
+    }
+  }}
+  className={`group transition-colors ${
+    user?.role?.toUpperCase() === 'ADMIN'
+      ? 'cursor-pointer hover:bg-emerald-50/10'
+      : 'cursor-not-allowed opacity-95'
+  }`}
+>
                   <td className="px-10 py-8">
                     <div className="flex items-center gap-5">
                       <div className="w-1 h-10 bg-[#005F54] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -617,9 +631,16 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                     </div>
                   </td>
                   <td className="px-10 py-8 text-right">
-                    <button className="p-3 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-[#005F54] group-hover:text-white transition-all shadow-sm">
-                       <ArrowRight size={20} />
-                    </button>
+                    <button
+  disabled={user?.role?.toUpperCase() !== 'ADMIN'}
+  className={`p-3 rounded-2xl transition-all shadow-sm ${
+    user?.role?.toUpperCase() === 'ADMIN'
+      ? 'bg-slate-50 text-slate-400 group-hover:bg-[#005F54] group-hover:text-white'
+      : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+  }`}
+>
+  <ArrowRight size={20} />
+</button>
                   </td>
                 </tr>
               ))}
@@ -640,13 +661,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
         {/* Simple Pagination Footer for list */}
         {totalCount > PAGE_SIZE && (
           <div className="p-6 border-t border-slate-50 flex items-center justify-center gap-4">
-             <button 
-               onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(1, prev - 1)); }}
-               disabled={currentPage === 1 || isPageLoading}
-               className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-[#005F54] transition-all disabled:opacity-30"
-             >
-                <ChevronLeft size={16} /> 
-             </button>
+            
              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
              <button 
                onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(totalPages, prev + 1)); }}
@@ -680,23 +695,52 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
               
               <div className="flex items-center gap-6">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Status</label>
-                  <div className="relative min-w-[200px]">
-                    <select 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-black text-[#005F54] focus:outline-none focus:ring-2 focus:ring-[#005F54]/10 appearance-none cursor-pointer"
-                      value={selectedCase.status}
-                      onChange={(e) => handleUpdateCaseField('status', e.target.value)}
-                    >
-                      <option value={CaseStatus.UNDER_TREATMENT}>Under Treatment</option>
-                      <option value={CaseStatus.RECOVERY}>Recovery</option>
-                      <option value={CaseStatus.RELEASED}>Released</option>
-                      <option value={CaseStatus.PERMANENT}>Permanent</option>
-                      <option value={CaseStatus.DECEASED}>Deceased</option>
-                      <option value={CaseStatus.CRITICAL}>Critical</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#005F54] pointer-events-none" />
-                  </div>
-                </div>
+  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+    Current Status
+  </label>
+
+  <div className="relative min-w-[200px]">
+    {user?.role?.toUpperCase() === 'ADMIN' ? (
+      <>
+        <select
+          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-black text-[#005F54] focus:outline-none focus:ring-2 focus:ring-[#005F54]/10 appearance-none cursor-pointer"
+          value={selectedCase.status}
+          onChange={(e) =>
+            handleUpdateCaseField('status', e.target.value)
+          }
+        >
+          <option value={CaseStatus.UNDER_TREATMENT}>
+            Under Treatment
+          </option>
+          <option value={CaseStatus.RECOVERY}>
+            Recovery
+          </option>
+          <option value={CaseStatus.RELEASED}>
+            Released
+          </option>
+          <option value={CaseStatus.PERMANENT}>
+            Permanent
+          </option>
+          <option value={CaseStatus.DECEASED}>
+            Deceased
+          </option>
+          <option value={CaseStatus.CRITICAL}>
+            Critical
+          </option>
+        </select>
+
+        <ChevronDown
+          size={14}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#005F54] pointer-events-none"
+        />
+      </>
+    ) : (
+      <div className="px-4 py-2 bg-slate-100 rounded-xl text-sm font-black text-slate-700">
+        {selectedCase.status}
+      </div>
+    )}
+  </div>
+</div>
                 
                 <div className="flex items-center gap-2">
                   <button 
@@ -706,14 +750,15 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                     <FileText size={16} className="group-hover:scale-110 transition-transform" />
                     View Case Sheet
                   </button>
-
-                  <button 
-                    onClick={() => navigate(`/cases/${selectedCase.id}/edit`)}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all shadow-sm active:scale-95 group"
-                  >
-                    <Edit3 size={16} className="group-hover:scale-110 transition-transform" />
-                    Edit Registry Info
-                  </button>
+{user?.role?.toUpperCase() === 'ADMIN' && (
+  <button 
+    onClick={() => navigate(`/cases/${selectedCase.id}/edit`)}
+    className="flex items-center gap-2 px-6 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all shadow-sm active:scale-95 group"
+  >
+    <Edit3 size={16} className="group-hover:scale-110 transition-transform" />
+    Edit Registry Info
+  </button>
+)}
                 </div>
 
                 <button onClick={() => setSelectedCase(null)} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-2xl text-slate-300 transition-all"><X size={24} /></button>
@@ -754,12 +799,14 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
                     <div className="w-1.5 h-6 bg-[#005F54] rounded-full"></div>
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Clinical History</h3>
                   </div>
-                  <button 
-                    onClick={() => navigate(`/cases/${selectedCase.id}/clinical/new`)}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-[#005F54] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-[#004a42] transition-all"
-                  >
-                    <Plus size={16} /> Add New Entry
-                  </button>
+                  {user?.role?.toUpperCase() === 'ADMIN' && (
+  <button 
+    onClick={() => navigate(`/cases/${selectedCase.id}/clinical/new`)}
+    className="flex items-center gap-2 px-6 py-2.5 bg-[#005F54] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-[#004a42] transition-all"
+  >
+    <Plus size={16} /> Add New Entry
+  </button>
+)}
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm">
@@ -822,7 +869,8 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
             </div>
           </div>
         </div>
-      )}
+      
+)}
 
       {selectedCase && isPreviewing && (
         <CaseSheetPreview caseItem={selectedCase} clinicalEntries={currentCaseLogs} onClose={() => setIsPreviewing(false)} />

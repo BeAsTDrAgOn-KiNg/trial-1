@@ -384,32 +384,59 @@ const WildlifePage: React.FC = () => {
     window.print();
   };
 
-  const handleSendEmail = () => {
-    const combinedLoc = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
-    const subject = encodeURIComponent(`Wildlife Case Transfer: ${formData.caseNumber} - ${formData.specificType}`);
-    const bodyText = `PFA Registry Transfer Request\n\n` +
-      `Dear PFA Division Team,\n\n` +
-      `Please find the details for the following wildlife transfer:\n\n` +
-      `Case Number: ${formData.caseNumber}\n` +
-      `Animal Species: ${formData.specificType}\n` +
-      `Reporter: ${formData.complainantName}\n` +
-      `Location: ${combinedLoc}\n\n` +
-      `Chronology:\n` +
-      `- Reported Date: ${formData.reportedDate}\n` +
-      `- Resolved/Transfer Date: ${formData.resolvedDate}\n` +
-      `- Documentation Timestamp: ${formData.dateTime}\n\n` +
-      `IMPORTANT REQUEST: Please reply to this email thread with the official internal Document Form ID / Reference generated at your end for our reconciliation records.\n\n` +
-      `Best regards,\n` +
-      `PFA Mysuru Sanctuary Team`;
-    
-    const body = encodeURIComponent(bodyText);
-    const recipient = formData.recipientEmail || 'bangalore@pfa.org';
-    
-    // Redirect to Gmail web compose window. 'to' is auto-filled as requested. 'from' is left to be handled by the user's Gmail.
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`;
-    window.open(gmailUrl, '_blank');
-  };
+ const handleSendEmail = () => {
+  if (
+    !formData.caseNumber ||
+    !formData.complainantName ||
+    !formData.phoneNumber ||
+    !formData.rescueArea ||
+    !formData.detailedAddress ||
+    !formData.specificType ||
+    !formData.recipientEmail ||
+    !formData.reportedDate ||
+    !formData.resolvedDate ||
+    !selectedImage
+  ) {
+    alert("Please complete all required fields before sending email.");
+    return;
+  }
 
+  if (formData.phoneNumber.length !== 10) {
+    alert("Reporter phone number must be exactly 10 digits.");
+    return;
+  }
+
+  const combinedLoc = `${formData.rescueArea}${formData.detailedAddress ? `, ${formData.detailedAddress}` : ''}`;
+
+  const subject = encodeURIComponent(
+    `Wildlife Case Transfer: ${formData.caseNumber} - ${formData.specificType}`
+  );
+
+  const bodyText =
+    `PFA Registry Transfer Request\n\n` +
+    `Dear PFA Division Team,\n\n` +
+    `Please find the details for the following wildlife transfer:\n\n` +
+    `Case Number: ${formData.caseNumber}\n` +
+    `Animal Species: ${formData.specificType}\n` +
+    `Reporter: ${formData.complainantName}\n` +
+    `Phone: ${formData.phoneNumber}\n` +
+    `Location: ${combinedLoc}\n\n` +
+    `Chronology:\n` +
+    `- Reported Date: ${formData.reportedDate}\n` +
+    `- Resolved/Transfer Date: ${formData.resolvedDate}\n` +
+    `- Documentation Timestamp: ${formData.dateTime}\n\n` +
+    `IMPORTANT REQUEST: Please reply to this email thread with the official internal Document Form ID / Reference generated at your end for our reconciliation records.\n\n` +
+    `Best regards,\n` +
+    `PFA Mysuru Sanctuary Team`;
+
+  const body = encodeURIComponent(bodyText);
+  const recipient = formData.recipientEmail || 'bangalore@pfa.org';
+
+  const gmailUrl =
+    `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`;
+
+  window.open(gmailUrl, '_blank');
+};
   const handleSaveDraft = () => {
     alert("Draft saved to local session storage.");
   };
@@ -503,7 +530,8 @@ const WildlifePage: React.FC = () => {
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Incident Area (Mysuru) *</label>
                   <div className="relative">
                      <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 transition-opacity ${areaSearch ? 'opacity-0' : 'opacity-100'}`} size={18} />
-                     <input 
+                     <input
+                     required 
                        type="text"
                        placeholder="Search area..."
                        className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] outline-none transition-all"
@@ -545,6 +573,7 @@ const WildlifePage: React.FC = () => {
                       </div>
                       <div className="flex gap-2">
                          <input 
+                         required
                            autoFocus
                            className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none"
                            value={customAreaInput}
@@ -560,6 +589,7 @@ const WildlifePage: React.FC = () => {
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Detailed Address / Landmark</label>
                   <input 
+                  required
                     type="text"
                     placeholder="Street, Landmark..." 
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" 
@@ -595,6 +625,7 @@ const WildlifePage: React.FC = () => {
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Identification Photo</label>
                   <input 
+                  required
                     type="file" 
                     accept="image/*" 
                     className="hidden" 

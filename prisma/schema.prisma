@@ -262,6 +262,7 @@ model MedicineUsage {
 model StaffMember {
   id             String   @id @default(uuid())
   name           String
+  type          String
   role           String
   phone          String
   joinedDate     String   @map("joined_date")
