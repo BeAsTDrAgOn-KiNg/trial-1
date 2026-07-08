@@ -55,7 +55,7 @@ model Animal {
   status       String
   createdAt    DateTime @default(now()) @map("created_at")
 
-  abcRecord    ABCRecord?
+  abcRecords   ABCRecord[]
   adoptions    Adoption[]
 
   @@map("animals")
@@ -120,7 +120,7 @@ model WildlifeCase {
 
 model ABCRecord {
   id              String   @id @default(uuid())
-  animalId        String?  @unique @map("animal_id")
+  animalId        String?  @map("animal_id")
   maleCount       Int?     @map("male_count")
   femaleCount     Int?     @map("female_count")
   area            String?
@@ -156,6 +156,7 @@ model AdoptionApplication {
   hasOtherPets   String?  @map("has_other_pets")
   vetName        String?  @map("vet_name")
   reason         String?
+  location       String?
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@map("adoption_applications")

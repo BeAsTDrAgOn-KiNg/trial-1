@@ -46,6 +46,157 @@ const UnderlineInput = ({ label, value, onChange, placeholder, width = "full", t
   );
 };
 
+const FormContent = ({ 
+  data, 
+  isPreview = false, 
+  onDataChange 
+}: { 
+  data: any; 
+  isPreview?: boolean; 
+  onDataChange?: (newData: any) => void; 
+}) => {
+  const handleChange = (field: string, value: any) => {
+    if (onDataChange) {
+      onDataChange({ ...data, [field]: value });
+    }
+  };
+
+  return (
+    <div className="relative bg-white min-h-[1100px] shadow-2xl rounded-sm p-8 md:p-20 overflow-hidden text-left">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-12">
+        <div className="flex items-center gap-5">
+          <div className="w-16 h-16 bg-[#005F54] rounded-full flex items-center justify-center text-white font-black text-2xl shadow-sm">PFA</div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-800 leading-none">People for Animals (PFA)</h2>
+            <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-tight">Survey No. 280, Near Roopanagar, Bogadi Village, Mysore</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Phone: 0821-2598213</p>
+          </div>
+        </div>
+        <div className="text-right w-full md:w-auto">
+          <div className="bg-slate-900 text-white px-6 py-2 text-xs font-black uppercase tracking-[0.2em] rounded-sm shadow-md mb-2 inline-block">ADOPTION FORM</div>
+          <div className="flex items-center justify-end gap-2 text-sm font-bold text-slate-800">No.<span className="text-rose-600 font-black underline underline-offset-4 decoration-slate-300"> {data.appNumber}</span></div>
+        </div>
+      </div>
+
+      <div className="space-y-8">
+        <UnderlineInput disabled={isPreview} label="Your Name" value={data.adopterName} onChange={(e: any) => handleChange('adopterName', e.target.value)} placeholder="Full Name" />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          <UnderlineInput disabled={isPreview} label="Age" value={data.adopterAge} onChange={(e: any) => handleChange('adopterAge', e.target.value)} placeholder="Years" />
+          <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
+            GENDER : 
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Male'} onChange={() => handleChange('adopterGender', 'Male')} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+              <span>Male</span>
+            </label>
+            <span>/</span>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Female'} onChange={() => handleChange('adopterGender', 'Female')} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+              <span>Female</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          <UnderlineInput 
+            disabled={isPreview} 
+            label="Mobile No" 
+            value={data.phone} 
+            onChange={(e: any) => {
+              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+              handleChange('phone', value);
+            }}
+            placeholder="10 digit mobile number"
+            type="tel"
+          />          
+          <UnderlineInput
+            disabled={isPreview}
+            label="Email"
+            value={data.email}
+            onChange={(e: any) => {
+              const value = e.target.value.replace(/\s/g, '');
+              handleChange('email', value);
+            }}
+            placeholder="email@address.com"
+            type="email"
+          />
+        </div>
+
+        <UnderlineInput disabled={isPreview} label="Home Address" value={data.address} onChange={(e: any) => handleChange('address', e.target.value)} placeholder="Street, Colony, Landmark" />
+
+        <div className="pt-6 space-y-4">
+          <p className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">I want to adopt a dog / cat / pup / kitten / other :</p>
+          <input disabled={isPreview} className="w-full bg-transparent border-b border-slate-400 focus:outline-none py-1 text-[#1e40af] font-bold italic" value={data.animalType} onChange={e => handleChange('animalType', e.target.value)} placeholder="Animal type" />
+        </div>
+
+        <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
+          GENDER OF ANIMAL : 
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Male'} onChange={() => handleChange('targetGender', 'Male')} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+            <span>Male</span>
+          </label>
+          <span>/</span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Female'} onChange={() => handleChange('targetGender', 'Female')} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
+            <span>Female</span>
+          </label>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+          <span className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">Colour preference:</span>
+          <input disabled={isPreview} className="flex-1 bg-transparent border-b border-slate-400 text-[#1e40af] font-bold w-full md:w-auto mt-2 md:mt-0" value={data.targetColor} onChange={e => handleChange('targetColor', e.target.value)} placeholder="Color pattern" />
+        </div>
+
+        <UnderlineInput disabled={isPreview} label="Why do you want to adopt?" value={data.reason} onChange={(e: any) => handleChange('reason', e.target.value)} placeholder="Reason" />
+
+        <div className="pt-8 p-6 bg-slate-50 border border-slate-100 rounded-sm">
+          <p className="text-[11px] text-slate-500 leading-relaxed italic">
+            Note: Adoption is a lifelong commitment. People for Animals (PFA), Mysore will conduct background checks and regular follow-ups for all adopted animals to ensure their well-being and welfare standards are maintained.
+          </p>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-end gap-10 pt-12">
+          <UnderlineInput label="Date" width="auto" value={data.date} disabled />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DeclarationContent = ({ data, isPreview = false }: { data: any, isPreview?: boolean }) => (
+  <div className="relative bg-white min-h-[1100px] shadow-2xl rounded-sm p-8 md:p-20 overflow-hidden text-left">
+    <div className="flex flex-col items-center text-center gap-4 mb-12">
+      <div className="w-16 h-16 bg-[#005F54] rounded-full flex items-center justify-center text-white font-black text-2xl shadow-sm">PFA</div>
+      <div>
+        <h2 className="text-3xl font-black text-slate-900 leading-none uppercase">People for Animals (PFA)</h2>
+        <p className="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-wide">Survey No. 280, Roopanagar, Bogadi Village, Mysuru.</p>
+      </div>
+      <div className="w-full h-px bg-slate-200 my-4"></div>
+      <h3 className="text-xl font-black text-slate-800 underline underline-offset-8 tracking-[0.2em]">ADOPTION AGREEMENT</h3>
+    </div>
+
+    <div className="space-y-10 leading-[3]">
+      <div className="text-sm font-bold text-slate-700 leading-loose text-justify">
+        I, Mr. / Mrs. / Ms. <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[250px] italic leading-tight">{data.adopterName || "...................................................."}</span> residing at <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[300px] italic leading-tight">{data.address || "...................................................."}</span> Tel/Mob: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[150px] italic leading-tight">{data.phone || "................................"}</span> Email: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[200px] italic leading-tight">{data.email || "................................"}</span> declare as follows:
+      </div>
+
+      <div className="space-y-6 text-sm font-bold text-slate-600 text-justify bg-slate-50/30 p-4 md:p-8 rounded-lg border border-slate-100 leading-relaxed">
+        <p>1. I am freely adopting an animal from <span className="text-slate-900 font-black uppercase">People For Animals</span>, and from now on the animal will be my responsibility.</p>
+        <p>2. I will give good food, water, medical care, and shelter to the animal and treat it kindly.</p>
+        <p>3. PFA can visit and check the animal. If the animal is not treated well, PFA can take it back.</p>
+        <p>4. I will not sell or abandon the animal. If I cannot care for it, I will return it to PFA.</p>
+      </div>
+
+      <div className="flex flex-col md:flex-row justify-between items-end gap-10 pt-20">
+        <div className="space-y-4 w-full md:w-auto">
+          <UnderlineInput label="Date" value={data.date} width="auto" disabled />
+          <UnderlineInput label="Time" value={data.time} width="auto" disabled />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const AdoptionsPage: React.FC = () => {
   const { adoptionApplications, addAdoptionApplication, updateAdoptionApplication, isLoading } = useAppContext();
   const [view, setView] = useState<'register' | 'summary'>('register');
@@ -170,146 +321,6 @@ const AdoptionsPage: React.FC = () => {
     );
   }
 
-  const FormContent = ({ data, isPreview = false, onDataChange }: { data: any, isPreview?: boolean, onDataChange?: (newData: any) => void }) => (
-    <div className="relative bg-white min-h-[1100px] shadow-2xl rounded-sm p-8 md:p-20 overflow-hidden text-left">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-12">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-[#005F54] rounded-full flex items-center justify-center text-white font-black text-2xl shadow-sm">PFA</div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 leading-none">People for Animals (PFA)</h2>
-            <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-tight">Survey No. 280, Near Roopanagar, Bogadi Village, Mysore</p>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Phone: 0821-2598213</p>
-          </div>
-        </div>
-        <div className="text-right w-full md:w-auto">
-          <div className="bg-slate-900 text-white px-6 py-2 text-xs font-black uppercase tracking-[0.2em] rounded-sm shadow-md mb-2 inline-block">ADOPTION FORM</div>
-          <div className="flex items-center justify-end gap-2 text-sm font-bold text-slate-800">No.<span className="text-rose-600 font-black underline underline-offset-4 decoration-slate-300"> {data.appNumber}</span></div>
-        </div>
-      </div>
-
-      <div className="space-y-8">
-        <UnderlineInput disabled={isPreview} label="Your Name" value={data.adopterName} onChange={(e: any) => onDataChange ? onDataChange({...data, adopterName: e.target.value}) : setFormData({...formData, adopterName: e.target.value})} placeholder="Full Name" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          <UnderlineInput disabled={isPreview} label="Age" value={data.adopterAge} onChange={(e: any) => onDataChange ? onDataChange({...data, adopterAge: e.target.value}) : setFormData({...formData, adopterAge: e.target.value})} placeholder="Years" />
-          <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
-            GENDER : 
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, adopterGender: 'Male'}) : setFormData({...formData, adopterGender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
-              <span>Male</span>
-            </label>
-            <span>/</span>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input disabled={isPreview} type="radio" checked={data.adopterGender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, adopterGender: 'Female'}) : setFormData({...formData, adopterGender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
-              <span>Female</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-<UnderlineInput 
-  disabled={isPreview} 
-  label="Mobile No" 
-  value={data.phone} 
-  onChange={(e: any) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-
-    onDataChange
-      ? onDataChange({ ...data, phone: value })
-      : setFormData({ ...formData, phone: value });
-  }}
-  placeholder="10 digit mobile number"
-  type="tel"
-/>          
-<UnderlineInput
-  disabled={isPreview}
-  label="Email"
-  value={data.email}
-  onChange={(e: any) => {
-    const value = e.target.value.replace(/\s/g, '');
-
-    onDataChange
-      ? onDataChange({ ...data, email: value })
-      : setFormData({ ...formData, email: value });
-  }}
-  placeholder="email@address.com"
-  type="email"
-/>        </div>
-
-        <UnderlineInput disabled={isPreview} label="Home Address" value={data.address} onChange={(e: any) => onDataChange ? onDataChange({...data, address: e.target.value}) : setFormData({...formData, address: e.target.value})} placeholder="Street, Colony, Landmark" />
-
-        <div className="pt-6 space-y-4">
-          <p className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">I want to adopt a dog / cat / pup / kitten / other :</p>
-          <input disabled={isPreview} className="w-full bg-transparent border-b border-slate-400 focus:outline-none py-1 text-[#1e40af] font-bold italic" value={data.animalType} onChange={e => onDataChange ? onDataChange({...data, animalType: e.target.value}) : setFormData({...formData, animalType: e.target.value})} placeholder="Animal type" />
-        </div>
-
-        <div className="flex items-center gap-4 text-[13px] font-bold text-slate-800 uppercase tracking-tight">
-          GENDER OF ANIMAL : 
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Male'} onChange={() => onDataChange ? onDataChange({...data, targetGender: 'Male'}) : setFormData({...formData, targetGender: 'Male'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
-            <span>Male</span>
-          </label>
-          <span>/</span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input disabled={isPreview} type="radio" checked={data.targetGender === 'Female'} onChange={() => onDataChange ? onDataChange({...data, targetGender: 'Female'}) : setFormData({...formData, targetGender: 'Female'})} className="w-4 h-4 border-slate-300 accent-[#005F54]" /> 
-            <span>Female</span>
-          </label>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-          <span className="text-[13px] font-bold text-slate-800 uppercase tracking-tight">Colour preference:</span>
-          <input disabled={isPreview} className="flex-1 bg-transparent border-b border-slate-400 text-[#1e40af] font-bold w-full md:w-auto mt-2 md:mt-0" value={data.targetColor} onChange={e => onDataChange ? onDataChange({...data, targetColor: e.target.value}) : setFormData({...formData, targetColor: e.target.value})} placeholder="Color pattern" />
-        </div>
-
-        <UnderlineInput disabled={isPreview} label="Why do you want to adopt?" value={data.reason} onChange={(e: any) => onDataChange ? onDataChange({...data, reason: e.target.value}) : setFormData({...formData, reason: e.target.value})} placeholder="Reason" />
-
-        <div className="pt-8 p-6 bg-slate-50 border border-slate-100 rounded-sm">
-          <p className="text-[11px] text-slate-500 leading-relaxed italic">
-              Note: Adoption is a lifelong commitment. People for Animals (PFA), Mysore will conduct background checks and regular follow-ups for all adopted animals to ensure their well-being and welfare standards are maintained.
-          </p>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-end gap-10 pt-12">
-          <UnderlineInput label="Date" width="auto" value={data.date} disabled />
-        </div>
-      </div>
-    </div>
-  );
-
-  const DeclarationContent = ({ data, isPreview = false }: { data: any, isPreview?: boolean }) => (
-    <div className="relative bg-white min-h-[1100px] shadow-2xl rounded-sm p-8 md:p-20 overflow-hidden text-left">
-      <div className="flex flex-col items-center text-center gap-4 mb-12">
-        <div className="w-16 h-16 bg-[#005F54] rounded-full flex items-center justify-center text-white font-black text-2xl shadow-sm">PFA</div>
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 leading-none uppercase">People for Animals (PFA)</h2>
-          <p className="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-wide">Survey No. 280, Roopanagar, Bogadi Village, Mysuru.</p>
-        </div>
-        <div className="w-full h-px bg-slate-200 my-4"></div>
-        <h3 className="text-xl font-black text-slate-800 underline underline-offset-8 tracking-[0.2em]">ADOPTION AGREEMENT</h3>
-      </div>
-
-      <div className="space-y-10 leading-[3]">
-        <div className="text-sm font-bold text-slate-700 leading-loose text-justify">
-          I, Mr. / Mrs. / Ms. <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[250px] italic leading-tight">{data.adopterName || "...................................................."}</span> residing at <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[300px] italic leading-tight">{data.address || "...................................................."}</span> Tel/Mob: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[150px] italic leading-tight">{data.phone || "................................"}</span> Email: <span className="inline-block px-4 font-black text-[#1e40af] border-b border-slate-300 min-w-[200px] italic leading-tight">{data.email || "................................"}</span> declare as follows:
-        </div>
-
-        <div className="space-y-6 text-sm font-bold text-slate-600 text-justify bg-slate-50/30 p-4 md:p-8 rounded-lg border border-slate-100 leading-relaxed">
-          <p>1. I am freely adopting an animal from <span className="text-slate-900 font-black uppercase">People For Animals</span>, and from now on the animal will be my responsibility.</p>
-          <p>2. I will give good food, water, medical care, and shelter to the animal and treat it kindly.</p>
-          <p>3. PFA can visit and check the animal. If the animal is not treated well, PFA can take it back.</p>
-          <p>4. I will not sell or abandon the animal. If I cannot care for it, I will return it to PFA.</p>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-end gap-10 pt-20">
-          <div className="space-y-4 w-full md:w-auto">
-              <UnderlineInput label="Date" value={data.date} width="auto" disabled />
-              <UnderlineInput label="Time" value={data.time} width="auto" disabled />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 no-print">
@@ -343,7 +354,7 @@ const AdoptionsPage: React.FC = () => {
         <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-8 duration-500">
            {formStep === 1 ? (
              <div className="space-y-6">
-               <FormContent data={formData} />
+               <FormContent data={formData} onDataChange={setFormData} />
                <div className="flex justify-end pt-12 no-print">
                   <button onClick={() => {
   const requiredFields = [

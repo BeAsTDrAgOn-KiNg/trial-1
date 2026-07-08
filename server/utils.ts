@@ -17,8 +17,8 @@ export const sanitizeData = (data: any) => {
   const { 
     id, createdAt, updatedAt, 
     reporter, clinicalEntries, 
-    abcRecord, adoptions, cases, usages, 
-    medicine, user, ...rest 
+    abcRecord, abcRecords, adoptions, cases, usages, 
+    medicine, user, animal, ...rest 
   } = data;
   
   const sanitized: any = {};

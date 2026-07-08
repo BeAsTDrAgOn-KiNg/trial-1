@@ -122,6 +122,7 @@ export interface AdoptionApplication {
   hasOtherPets?: string;
   vetName?: string;
   reason?: string;
+  location?: string;
   createdAt?: string;
 }
 

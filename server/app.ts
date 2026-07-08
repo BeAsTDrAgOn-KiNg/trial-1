@@ -18,6 +18,7 @@ import adoptionRoutes from './routes/adoption.routes';
 import declarationRoutes from './routes/declaration.routes';
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
+import abcRecordRoutes from './routes/abc-record.routes';
 import createMiscRouter from './routes/misc.routes';
 
 // Ensure uploads directory exists
@@ -66,6 +67,7 @@ app.use('/api', medicalRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/adoptions', adoptionRoutes);
 app.use('/api/declarations', declarationRoutes);
+app.use('/api/abc-records', abcRecordRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 

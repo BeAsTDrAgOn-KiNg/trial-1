@@ -29,6 +29,7 @@ async function main() {
       {
         id: '1',
         name: 'Dr. Anita Desai',
+        type: 'Staff',
         phone: '9876543210',
         role: 'Senior Vet',
         joinedDate: '2023-01-10',
@@ -36,6 +37,7 @@ async function main() {
       {
         id: '2',
         name: 'Prateek Yadav',
+        type: 'Staff',
         phone: '9876543211',
         role: 'Rescue Lead',
         joinedDate: '2023-02-01',

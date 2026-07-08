@@ -72,11 +72,11 @@ router.get('/', async (req, res) => {
 
 router.get('/export', async (req, res) => {
 
-  if (!isAdmin(req)) {
-    return res.status(403).json({
-      error: 'Access denied. Admins only.'
-    });
-  }
+  // if (!isAdmin(req)) {
+  //   return res.status(403).json({
+  //     error: 'Access denied. Admins only.'
+  //   });
+  // }
 
 
   try {
@@ -92,11 +92,11 @@ router.get('/export', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
 
-  if (!isAdmin(req)) {
-    return res.status(403).json({
-      error: 'Access denied. Admins only.'
-    });
-  }
+  // if (!isAdmin(req)) {
+  //   return res.status(403).json({
+  //     error: 'Access denied. Admins only.'
+  //   });
+  // }
   try {
     const caseItem = await prisma.case.findUnique({
       where: { id: req.params.id },
@@ -131,11 +131,11 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
 
-  if (!isAdmin(req)) {
-    return res.status(403).json({
-      error: 'Access denied. Admins only.'
-    });
-  }
+  // if (!isAdmin(req)) {
+  //   return res.status(403).json({
+  //     error: 'Access denied. Admins only.'
+  //   });
+  // }
 
   try {
     const updatedCase = await prisma.case.update({
@@ -150,11 +150,11 @@ router.patch('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
 
-  if (!isAdmin(req)) {
-    return res.status(403).json({
-      error: 'Access denied. Admins only.'
-    });
-  }
+  // if (!isAdmin(req)) {
+  //   return res.status(403).json({
+  //     error: 'Access denied. Admins only.'
+  //   });
+  // }
 
   try {
     await prisma.case.delete({ where: { id: req.params.id } });

@@ -26,4 +26,54 @@ describe('Transactional & Other Entity APIs', () => {
     const res = await request(app).post('/api/adoptions').send({ animalId: '1', userId: '1', status: 'pending' });
     expect(res.status).toBe(201);
   });
+
+  it('should fetch abc records', async () => {
+    prismaMock.aBCRecord.findMany.mockResolvedValue([{ id: 'abc-1', sterilized: true }] as any);
+    const res = await request(app).get('/api/abc-records');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([{ id: 'abc-1', sterilized: true }]);
+  });
+
+  it('should create an abc record', async () => {
+    prismaMock.aBCRecord.create.mockResolvedValue({ id: 'abc-1', sterilized: true } as any);
+    const res = await request(app).post('/api/abc-records').send({ sterilized: true, vaccinationDone: true, surgeryDate: '2025-01-01' });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('id', 'abc-1');
+  });
+
+  it('should sanitize and parse abc record input data correctly', async () => {
+    prismaMock.aBCRecord.create.mockResolvedValue({ id: 'abc-1', animalId: null, maleCount: 5, femaleCount: null } as any);
+    const res = await request(app).post('/api/abc-records').send({
+      animalId: '',
+      maleCount: '5',
+      femaleCount: '',
+      sterilized: 'true',
+      vaccinationDone: true,
+      surgeryDate: '2025-01-01'
+    });
+    expect(res.status).toBe(201);
+    expect(prismaMock.aBCRecord.create).toHaveBeenCalledWith({
+      data: {
+        animalId: null,
+        maleCount: 5,
+        femaleCount: null,
+        sterilized: true,
+        vaccinationDone: true,
+        surgeryDate: '2025-01-01'
+      }
+    });
+  });
+
+  it('should update an abc record', async () => {
+    prismaMock.aBCRecord.update.mockResolvedValue({ id: 'abc-1', sterilized: false } as any);
+    const res = await request(app).patch('/api/abc-records/abc-1').send({ sterilized: false });
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('sterilized', false);
+  });
+
+  it('should delete an abc record', async () => {
+    prismaMock.aBCRecord.delete.mockResolvedValue({ id: 'abc-1' } as any);
+    const res = await request(app).delete('/api/abc-records/abc-1');
+    expect(res.status).toBe(204);
+  });
 });
