@@ -1,29 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../db";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-      };
-    }
-  }
-}
-
 export const requireAdmin = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
-    // This assumes your authentication middleware
-    // has already populated req.user
-    const userId = req.user?.id;
+    const userId = req.query.userId as string | undefined;
 
     if (!userId) {
       return res.status(401).json({
-        error: "Authentication required",
+        error: "User ID is required",
       });
     }
 

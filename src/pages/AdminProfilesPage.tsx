@@ -19,7 +19,11 @@ interface FormErrors {
 
 const API_URL = "/api/users";
 
-const AdminProfilesPage: React.FC = () => {
+interface AdminProfilesPageProps {
+  userId?: string;
+}
+
+const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
@@ -36,7 +40,7 @@ const AdminProfilesPage: React.FC = () => {
 
   const fetchProfiles = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(`${API_URL}?userId=${userId}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch profiles");
