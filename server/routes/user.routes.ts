@@ -2,8 +2,11 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "../db";
 import { sendError } from "../utils";
+import { requireAdmin } from "../middleware/requireAdmin";
 
 const router = Router();
+
+router.use(requireAdmin)
 
 /**
  * GET /api/users
