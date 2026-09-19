@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { 
   Search, 
   BriefcaseMedical, 
@@ -34,7 +35,7 @@ const SearchResultsPage: React.FC = () => {
       
       setIsSearching(true);
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const response = await apiFetch(`/api/search?q=${encodeURIComponent(query)}`);
         if (response.ok) {
           const data = await response.json();
           setResults(data);

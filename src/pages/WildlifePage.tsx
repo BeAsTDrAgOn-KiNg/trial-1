@@ -618,7 +618,7 @@ const WildlifePage: React.FC = () => {
 
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Animal Species / Type *</label>
+                  <label className="text-xs font-black text-slate-800 ml-1 uppercase tracking-widest">Animal Type *</label>
                   <input required type="text" placeholder="Dog, Indian Rock Python, Barn Owl, etc." className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] focus:outline-none transition-all" value={formData.specificType} onChange={e => setFormData({...formData, specificType: e.target.value})} />
                 </div>
 

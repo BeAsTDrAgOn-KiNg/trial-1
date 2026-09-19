@@ -20,6 +20,8 @@ import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
 import abcRecordRoutes from './routes/abc-record.routes';
 import createMiscRouter from './routes/misc.routes';
+import { requireAuth } from './middleware/requireAuth';
+import { requireRole } from './middleware/requireRole';
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
@@ -58,22 +60,19 @@ const upload = multer({ storage });
 
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
-app.use('/api/animals', animalRoutes);
-app.use('/api/cases', caseRoutes);
-app.use('/api/wildlife', wildlifeRoutes);
-app.use('/api/staff', staffRoutes);
+app.use('/api', requireAuth);
+app.use('/api/animals', requireRole(['Admin', 'Doctor']), animalRoutes);
+app.use('/api/cases', requireRole(['Admin', 'Doctor']), caseRoutes);
+app.use('/api/wildlife', requireRole(['Admin', 'Doctor', 'Data Entry']), wildlifeRoutes);
+app.use('/api/staff', requireRole(['Admin']), staffRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api', medicalRoutes);
-app.use('/api/donations', donationRoutes);
-app.use('/api/adoptions', adoptionRoutes);
-app.use('/api/declarations', declarationRoutes);
-app.use('/api/abc-records', abcRecordRoutes);
+app.use('/api/donations', requireRole(['Admin']), donationRoutes);
+app.use('/api/adoptions', requireRole(['Admin']), adoptionRoutes);
+app.use('/api/declarations', requireRole(['Admin', 'Data Entry']), declarationRoutes);
+app.use('/api/abc-records', requireRole(['Admin', 'Doctor', 'Data Entry']), abcRecordRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
-
-// ADMIN ROUTES
-app.use('/api/admin', adminRoutes);
-
+app.use('/api/admin', requireRole(['Admin']), adminRoutes);
 app.use('/api', createMiscRouter(upload));
 
 export default app;

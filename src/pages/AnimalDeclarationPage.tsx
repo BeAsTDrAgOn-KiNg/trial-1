@@ -71,7 +71,6 @@ const AnimalDeclarationPage: React.FC = () => {
     setView('form');
   };
 const isFormValid =
-  formData.formNo.trim() !== '' &&
   formData.declarerName.trim() !== '' &&
   formData.address.trim() !== '' &&
   formData.phone.trim().length === 10 &&
@@ -101,7 +100,8 @@ formData.signature.trim() !== '' &&
 
     const newRecord: Declaration = {
       id: editingId || Date.now().toString(),
-      formNo: formData.formNo || (editingId ? (declarations.find(r => r.id === editingId)?.formNo || '') : `DEC-2024-${String(declarations.length + 1).padStart(3, '0')}`),
+      // The server assigns a sequential form number for new declarations.
+      formNo: editingId ? formData.formNo : '',
       declarerName: formData.declarerName,
       address: formData.address,
       phone: formData.phone,
@@ -211,20 +211,11 @@ formData.signature.trim() !== '' &&
                    <div className="space-y-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Form Number</label>
                      <input
-  required
   type="text"
-  inputMode="text"
-  pattern="[A-Za-z0-9-]+"
-  title="Only letters, numbers, and hyphens are allowed"
-  placeholder="e.g., FORM-1234"
+  readOnly
+  placeholder="Assigned automatically after submission"
   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-[#005F54]/5 focus:border-[#005F54] transition-all"
   value={formData.formNo}
-  onChange={e =>
-    setFormData({
-      ...formData,
-      formNo: e.target.value
-    })
-  }
 />
                    </div>
                    <div className="space-y-2">

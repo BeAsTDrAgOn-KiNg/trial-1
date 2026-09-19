@@ -1,158 +1,69 @@
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { prisma } from '../db';
+import { sendError } from '../utils';
 
-const router = express.Router();
-const prisma = new PrismaClient();
+const router = Router();
+const profileSelect = { id: true, fullName: true, email: true, phone: true, role: true, isRootAdmin: true, isActive: true, createdAt: true };
 
-/**
- * GET ALL USERS
- */
-router.get('/profiles', async (req, res) => {
+router.get('/profiles', async (_req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    res.json(users);
-  } catch (error) {
-    console.error('GET USERS ERROR:', error);
-    res.status(500).json({
-      error: 'Failed to fetch profiles'
-    });
-  }
+    res.json(await prisma.user.findMany({ orderBy: { createdAt: 'desc' }, select: profileSelect }));
+  } catch (error) { sendError(res, error, 'Failed to fetch profiles'); }
 });
 
-/**
- * GET SINGLE USER
- */
 router.get('/profiles/:id', async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.params.id
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'Profile not found'
-      });
-    }
-
+    const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: profileSelect });
+    if (!user) return res.status(404).json({ error: 'Profile not found' });
     res.json(user);
-  } catch (error) {
-    console.error('GET USER ERROR:', error);
-    res.status(500).json({
-      error: 'Failed to fetch profile'
-    });
-  }
+  } catch (error) { sendError(res, error, 'Failed to fetch profile'); }
 });
 
-/**
- * CREATE USER
- */
 router.post('/profiles', async (req, res) => {
   try {
-    const {
-      fullName,
-      email,
-      password,
-      phone,
-      role
-    } = req.body;
+    const { fullName, email, password, phone, role } = req.body;
+    if (!fullName || !email || !password || !role) return res.status(400).json({ error: 'Full name, email, password and role are required' });
+    if (await prisma.user.findUnique({ where: { email } })) return res.status(409).json({ error: 'Email already exists' });
 
-    if (!fullName || !email || !password) {
-      return res.status(400).json({
-        error: 'Full name, email and password are required'
-      });
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email
-      }
+    const user = await prisma.user.create({
+      data: { fullName, email, phone: phone || null, role, password: await bcrypt.hash(password, 12) },
+      select: profileSelect,
     });
-
-    if (existingUser) {
-      return res.status(400).json({
-        error: 'Email already exists'
-      });
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        fullName,
-        email,
-        password,
-        phone,
-        role
-      }
-    });
-
-    res.status(201).json(newUser);
-  } catch (error) {
-    console.error('CREATE USER ERROR:', error);
-    res.status(500).json({
-      error: 'Failed to create profile'
-    });
-  }
+    res.status(201).json(user);
+  } catch (error) { sendError(res, error, 'Failed to create profile'); }
 });
 
-/**
- * UPDATE USER
- */
 router.put('/profiles/:id', async (req, res) => {
   try {
-    const {
-      fullName,
-      email,
-      phone,
-      role
-    } = req.body;
-
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: req.params.id
-      },
-      data: {
-        fullName,
-        email,
-        phone,
-        role
-      }
+    const target = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target) return res.status(404).json({ error: 'Profile not found' });
+    const { fullName, email, phone, role } = req.body;
+    const user = await prisma.user.update({
+      where: { id: req.params.id }, data: { fullName, email, phone: phone || null, role }, select: profileSelect,
     });
-
-    res.json(updatedUser);
-  } catch (error) {
-    console.error('UPDATE USER ERROR:', error);
-    res.status(500).json({
-      error: 'Failed to update profile'
-    });
-  }
+    res.json(user);
+  } catch (error) { sendError(res, error, 'Failed to update profile'); }
 });
 
-/**
- * DELETE USER
- */
+router.patch('/profiles/:id/reactivate', async (req, res) => {
+  try {
+    if (!await prisma.user.findUnique({ where: { id: req.params.id } })) return res.status(404).json({ error: 'Profile not found' });
+    const user = await prisma.user.update({ where: { id: req.params.id }, data: { isActive: true }, select: profileSelect });
+    res.json(user);
+  } catch (error) { sendError(res, error, 'Failed to reactivate profile'); }
+});
+
 router.delete('/profiles/:id', async (req, res) => {
   try {
-    await prisma.user.delete({
-      where: {
-        id: req.params.id
-      }
-    });
+    const target = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target) return res.status(404).json({ error: 'Profile not found' });
+    if (target.isRootAdmin) return res.status(403).json({ error: 'Cannot delete the root admin account' });
+    if (req.params.id === req.user!.id) return res.status(403).json({ error: 'You cannot delete your own account' });
 
-    res.json({
-      message: 'Profile deleted successfully'
-    });
-  } catch (error) {
-    console.error('DELETE USER ERROR:', error);
-    res.status(500).json({
-      error: 'Failed to delete profile'
-    });
-  }
+    const user = await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false }, select: profileSelect });
+    res.json(user);
+  } catch (error) { sendError(res, error, 'Failed to deactivate profile'); }
 });
 
 export default router;

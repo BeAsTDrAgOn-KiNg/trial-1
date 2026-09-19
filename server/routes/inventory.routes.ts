@@ -1,8 +1,13 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { sendError, sanitizeData } from '../utils';
+import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
+
+router.use('/medicines', requireRole(['Admin', 'Doctor', 'Data Entry']));
+router.use('/housekeeping', requireRole(['Admin', 'Data Entry']));
+router.use('/items', requireRole(['Admin', 'Doctor', 'Data Entry']));
 
 // --- Medicines ---
 router.get('/medicines', async (req, res) => {

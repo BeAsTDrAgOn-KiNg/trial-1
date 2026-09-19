@@ -3,10 +3,35 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../db";
 import { sendError } from "../utils";
 import { requireAdmin } from "../middleware/requireAdmin";
+import { requireRole } from "../middleware/requireRole";
 
 const router = Router();
 
-// router.use(requireAdmin)
+router.patch('/me', async (req, res) => {
+  try {
+    const { fullName, phone, password } = req.body;
+    const data: { fullName?: string; phone?: string | null; password?: string } = {};
+
+    if (fullName !== undefined) data.fullName = fullName;
+    if (phone !== undefined) data.phone = phone || null;
+    if (password) data.password = await bcrypt.hash(password, 12);
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: 'Provide a name, phone number, or password to update' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user!.id },
+      data,
+      select: { id: true, fullName: true, email: true, phone: true, role: true },
+    });
+    res.json(user);
+  } catch (error) {
+    sendError(res, error, 'Failed to update your profile');
+  }
+});
+
+router.use(requireRole(['Admin']));
 
 /**
  * GET /api/users
@@ -24,6 +49,8 @@ router.get("/", async (req, res) => {
         email: true,
         phone: true,
         role: true,
+        isRootAdmin: true,
+        isActive: true,
       },
     });
 
@@ -78,6 +105,8 @@ router.post("/", async (req, res) => {
         email: true,
         phone: true,
         role: true,
+        isRootAdmin: true,
+        isActive: true,
       },
     });
 
@@ -194,10 +223,19 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    await prisma.user.delete({
+    if (existingUser.isRootAdmin) {
+      return res.status(403).json({ error: "Cannot delete the root admin account" });
+    }
+
+    if (id === req.user!.id) {
+      return res.status(403).json({ error: "You cannot delete your own account" });
+    }
+
+    await prisma.user.update({
       where: {
         id,
       },
+      data: { isActive: false },
     });
 
     res.status(204).send();

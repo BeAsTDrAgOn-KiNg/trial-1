@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { 
   ChevronLeft, 
   Stethoscope, 
@@ -59,7 +60,7 @@ const NewClinicalEntryPage: React.FC = () => {
     const fetchCase = async () => {
       setIsCaseLoading(true);
       try {
-        const res = await fetch(`/api/cases/${caseId}`);
+        const res = await apiFetch(`/api/cases/${caseId}`);
         const found = await res.json();
         if (found && !found.error) {
           setTargetCase(found);

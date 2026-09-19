@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { 
   Search, 
   Plus, 
@@ -362,7 +363,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
         month: filterMonth,
       });
 
-      const res = await fetch(`/api/cases?${params.toString()}`);
+      const res = await apiFetch(`/api/cases?${params.toString()}`);
       if (res.ok) {
         const result = await res.json();
         setCases(result.data);
@@ -388,7 +389,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
       if (cached) {
         setSelectedCase(cached);
       } else {
-        fetch(`/api/cases/${state.openCaseId}`)
+        apiFetch(`/api/cases/${state.openCaseId}`)
           .then(res => res.json())
           .then(data => {
             if (!data.error) setSelectedCase(data);

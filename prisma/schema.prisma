@@ -34,6 +34,8 @@ model User {
   password  String
   phone     String?
   role      String   @default("Data Entry")
+  isRootAdmin Boolean @default(false) @map("is_root_admin")
+  isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
   cases     Case[]   @relation("ReportedBy")
@@ -94,7 +96,7 @@ model ClinicalEntry {
 
 model WildlifeCase {
   id                String   @id @default(uuid())
-  caseNumber        String   @map("case_number")
+  caseNumber        String   @unique @map("case_number")
   dateTime          String   @map("date_time")
   animal            String
   species           String

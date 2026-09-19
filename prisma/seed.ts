@@ -18,6 +18,7 @@ async function main() {
         password: hashedPassword,
         role: 'Admin',
         phone: '1234567890',
+        isRootAdmin: true,
       }
     ],
     skipDuplicates: true,

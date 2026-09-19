@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { 
   ChevronLeft, 
   Download, 
@@ -25,7 +26,7 @@ const CensusReportPage: React.FC = () => {
 
   useEffect(() => {
     setIsFetching(true);
-    fetch('/api/cases/export')
+    apiFetch('/api/cases/export')
       .then(res => res.json())
       .then(data => {
         setReportCases(data);

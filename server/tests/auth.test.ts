@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../app';
 import { prismaMock } from './setup';
 import bcrypt from 'bcryptjs';
+import { issueAuthToken } from '../auth/token';
 
 describe('Auth API', () => {
   const password = 'password123';
@@ -53,7 +54,25 @@ describe('Auth API', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('fullName', 'Test User');
+    expect(res.body).toHaveProperty('token');
     expect(res.body).not.toHaveProperty('password');
+  });
+
+  it('requires a valid token and enforces the route role', async () => {
+    prismaMock.donation.findMany.mockResolvedValue([] as any);
+
+    const unauthenticated = await request(app).get('/api/donations');
+    expect(unauthenticated.status).toBe(401);
+
+    const doctor = await request(app)
+      .get('/api/donations?userId=admin-1')
+      .set('Authorization', `Bearer ${issueAuthToken('doctor-1', 'Doctor')}`);
+    expect(doctor.status).toBe(403);
+
+    const admin = await request(app)
+      .get('/api/donations')
+      .set('Authorization', `Bearer ${issueAuthToken('admin-1', 'Admin')}`);
+    expect(admin.status).toBe(200);
   });
 
   it('should reject login with wrong password', async () => {
