@@ -55,6 +55,7 @@ import { User } from "./types";
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import AdminProfilesPage from "./pages/AdminProfilesPage";
+import { apiFetch, clearAuthToken, getAuthToken } from "./lib/api";
 
 interface SidebarLinkProps {
   to: string;
@@ -91,11 +92,46 @@ const AppHeader: React.FC<{
   user: User;
   onLogout: () => void;
   onMenuClick: () => void;
-}> = ({ user, onLogout, onMenuClick }) => {
+  onUserUpdated: (user: User) => void;
+}> = ({ user, onLogout, onMenuClick, onUserUpdated }) => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const { lowStockMedicines } = useAppContext();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ fullName: user.fullName, phone: user.phone || "", password: "" });
+  const [profileError, setProfileError] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const openProfile = () => {
+    setProfileForm({ fullName: user.fullName, phone: user.phone || "", password: "" });
+    setProfileError("");
+    setIsProfileOpen(true);
+  };
+
+  const saveProfile = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSavingProfile(true);
+    setProfileError("");
+    try {
+      const response = await apiFetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm),
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        setProfileError(error.error || 'Unable to update your profile.');
+        return;
+      }
+      onUserUpdated(await response.json());
+      setIsProfileOpen(false);
+    } catch {
+      setProfileError('Unable to connect to the server.');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,12 +255,30 @@ const AppHeader: React.FC<{
             <p className="text-[10px] text-[#005F54] font-black uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">
               {user.role}
             </p>
+            <button onClick={openProfile} className="block ml-auto mt-1 text-[10px] font-bold text-slate-400 hover:text-[#005F54]">
+              My Profile
+            </button>
           </div>
-          <button className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm hover:scale-105 transition-transform">
+          <button onClick={openProfile} aria-label="Edit my profile" className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center text-[#005F54] font-bold border-2 border-white shadow-sm hover:scale-105 transition-transform">
             {(user.fullName || "U").charAt(0)}
           </button>
         </div>
       </div>
+      {isProfileOpen && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={saveProfile} className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div><h2 className="text-xl font-black text-slate-800">My Profile</h2><p className="text-xs text-slate-500 mt-1">Your role cannot be changed here.</p></div>
+              <button type="button" onClick={() => setIsProfileOpen(false)} className="p-2 text-slate-400 hover:text-slate-700"><X size={20} /></button>
+            </div>
+            {profileError && <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-xl">{profileError}</p>}
+            <label className="block text-sm font-bold text-slate-700">Full name<input required value={profileForm.fullName} onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label>
+            <label className="block text-sm font-bold text-slate-700">Phone<input value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value.replace(/\D/g, '') })} className="mt-1 w-full p-3 border rounded-xl" inputMode="numeric" maxLength={10} /></label>
+            <label className="block text-sm font-bold text-slate-700">New password <span className="font-normal text-slate-400">optional</span><input type="password" value={profileForm.password} onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label>
+            <button disabled={isSavingProfile} className="w-full py-3 rounded-xl bg-[#005F54] text-white font-bold disabled:opacity-50">{isSavingProfile ? 'Saving...' : 'Save changes'}</button>
+          </form>
+        </div>
+      )}
     </header>
   );
 };
@@ -239,19 +293,28 @@ const App: React.FC = () => {
   useEffect(() => {
     // Check local session
     const savedUser = localStorage.getItem("pfa_user_session");
-    if (savedUser) {
+    if (savedUser && getAuthToken()) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem("pfa_user_session");
+        clearAuthToken();
       }
+    } else if (savedUser) {
+      localStorage.removeItem("pfa_user_session");
     }
     setIsAuthLoading(false);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("pfa_user_session");
+    clearAuthToken();
     setUser(null);
+  };
+
+  const handleUserUpdated = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem("pfa_user_session", JSON.stringify(updatedUser));
   };
 
   const allNavigation = [
@@ -324,7 +387,7 @@ const App: React.FC = () => {
 
   return (
     <NotificationProvider>
-      <AppProvider>
+      <AppProvider enabled={Boolean(user)} userRole={user?.role}>
         <Router>
           {!user ? (
             <Routes>
@@ -388,6 +451,7 @@ const App: React.FC = () => {
                   user={user}
                   onLogout={handleLogout}
                   onMenuClick={() => setIsMobileMenuOpen(true)}
+                  onUserUpdated={handleUserUpdated}
                 />
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8">
@@ -441,7 +505,7 @@ const App: React.FC = () => {
                     <Route path="*" element={<Navigate to="/" replace />} />
                     <Route
                       path="/admin"
-                      element={<AdminProfilesPage userId={user.id} />}
+                      element={<AdminProfilesPage />}
                     />
                   </Routes>
                 </div>

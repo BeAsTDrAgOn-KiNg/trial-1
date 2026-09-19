@@ -25,6 +25,18 @@ router.post('/applications', async (req, res) => {
   }
 });
 
+router.patch('/applications/:id', async (req, res) => {
+  try {
+    const appRecord = await prisma.adoptionApplication.update({
+      where: { id: req.params.id },
+      data: sanitizeData(req.body),
+    });
+    res.json(appRecord);
+  } catch (error) {
+    sendError(res, error, 'Failed to update adoption application');
+  }
+});
+
 // --- Adoptions ---
 router.get('/', async (req, res) => {
   try {
@@ -44,6 +56,18 @@ router.post('/', async (req, res) => {
     res.status(201).json(adoption);
   } catch (error) {
     sendError(res, error, 'Failed to create adoption');
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  try {
+    const adoption = await prisma.adoption.update({
+      where: { id: req.params.id },
+      data: sanitizeData(req.body),
+    });
+    res.json(adoption);
+  } catch (error) {
+    sendError(res, error, 'Failed to update adoption');
   }
 });
 

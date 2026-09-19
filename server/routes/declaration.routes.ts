@@ -15,7 +15,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const decl = await prisma.declaration.create({ data: sanitizeData(req.body) });
+    const declarationCount = await prisma.declaration.count();
+    const formNo = `FORM-${new Date().getFullYear()}-${String(declarationCount + 1).padStart(3, '0')}`;
+    const { formNo: _clientFormNo, ...data } = sanitizeData(req.body);
+    const decl = await prisma.declaration.create({ data: { ...data, formNo } });
     res.status(201).json(decl);
   } catch (error) {
     sendError(res, error, 'Failed to create declaration');

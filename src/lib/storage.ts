@@ -1,3 +1,5 @@
+import { apiFetch } from './api';
+
 /**
  * Uploads a file to the server and returns the URL.
  * @param file The file to upload
@@ -7,7 +9,7 @@ export const uploadFile = async (file: File): Promise<string | null> => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch('/api/upload', {
+    const response = await apiFetch('/api/upload', {
       method: 'POST',
       body: formData,
     });

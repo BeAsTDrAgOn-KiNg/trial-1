@@ -303,10 +303,14 @@ const AdoptionsPage: React.FC = () => {
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editData) {
-      updateAdoptionApplication(editData);
-      setViewingRecord(editData);
+      const saved = await updateAdoptionApplication(editData);
+      if (!saved) {
+        alert("Unable to save the adoption record. Please try again.");
+        return;
+      }
+      setViewingRecord(saved);
       setIsEditing(false);
       setEditData(null);
       alert("Adoption record updated successfully.");

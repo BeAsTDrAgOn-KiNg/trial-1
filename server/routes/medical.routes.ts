@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { sendError, sanitizeData } from '../utils';
+import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
+
+router.use('/clinical-entries', requireRole(['Admin', 'Doctor']));
+router.use('/medicine-usages', requireRole(['Admin', 'Doctor', 'Data Entry']));
 
 // --- Clinical Entries ---
 router.get('/clinical-entries', async (req, res) => {

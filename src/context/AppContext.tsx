@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { useNotification } from "./NotificationContext";
+import { apiFetch } from "../lib/api";
 import {
   Animal,
   Case,
@@ -72,7 +73,7 @@ interface AppContextType {
   addDonation: (donation: Donation) => void;
   addAdoption: (adoption: Adoption) => void;
   addAdoptionApplication: (application: AdoptionApplication) => void;
-  updateAdoptionApplication: (application: AdoptionApplication) => void;
+  updateAdoptionApplication: (application: AdoptionApplication) => Promise<AdoptionApplication | null>;
   addABCRecord: (record: ABCRecord) => void;
   updateABCRecord: (record: ABCRecord) => void;
   addHousekeepingSupply: (supply: HousekeepingSupply) => void;
@@ -86,9 +87,11 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AppProvider: React.FC<{
+  children: ReactNode;
+  enabled?: boolean;
+  userRole?: string;
+}> = ({ children, enabled = true, userRole }) => {
   const { notify } = useNotification();
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -116,6 +119,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchOrEmpty = (path: string, allowedRoles: string[]) =>
+      allowedRoles.includes(userRole ?? '')
+        ? apiFetch(path)
+        : Promise.resolve(new Response('[]', { status: 200 }));
+
     const fetchData = async () => {
       try {
         const [
@@ -134,21 +147,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           adoptionsRes,
           usersRes,
         ] = await Promise.all([
-          fetch("/api/animals"),
+          fetchOrEmpty("/api/animals", ["Admin", "Doctor"]),
           // fetch('/api/cases'), // Remove global fetch to save bandwidth
-          fetch("/api/wildlife"),
-          fetch("/api/staff"),
-          fetch("/api/inventory/medicines"),
-          fetch("/api/inventory/housekeeping"),
-          fetch("/api/donations"),
-          fetch("/api/adoptions/applications"),
-          fetch("/api/clinical-entries"),
-          fetch("/api/abc-records"),
-          fetch("/api/declarations"),
-          fetch("/api/medicine-usages"),
-          fetch("/api/inventory/items"),
-          fetch("/api/adoptions"),
-          fetch("/api/users"),
+          fetchOrEmpty("/api/wildlife", ["Admin", "Doctor", "Data Entry"]),
+          fetchOrEmpty("/api/staff", ["Admin"]),
+          fetchOrEmpty("/api/inventory/medicines", ["Admin", "Doctor", "Data Entry"]),
+          fetchOrEmpty("/api/inventory/housekeeping", ["Admin", "Data Entry"]),
+          fetchOrEmpty("/api/donations", ["Admin"]),
+          fetchOrEmpty("/api/adoptions/applications", ["Admin"]),
+          fetchOrEmpty("/api/clinical-entries", ["Admin", "Doctor"]),
+          fetchOrEmpty("/api/abc-records", ["Admin", "Doctor", "Data Entry"]),
+          fetchOrEmpty("/api/declarations", ["Admin", "Data Entry"]),
+          fetchOrEmpty("/api/medicine-usages", ["Admin", "Doctor", "Data Entry"]),
+          fetchOrEmpty("/api/inventory/items", ["Admin", "Doctor", "Data Entry"]),
+          fetchOrEmpty("/api/adoptions", ["Admin"]),
+          fetchOrEmpty("/api/users", ["Admin"]),
         ]);
 
         if (animalsRes.ok) setAnimals(await animalsRes.json());
@@ -178,7 +191,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     fetchData();
-  }, [notify]);
+  }, [enabled, notify, userRole]);
 
   const handleRequest = useCallback(
     async (
@@ -188,7 +201,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       onSuccess?: (data: any) => void,
     ) => {
       try {
-        const response = await fetch(apiPath, options);
+        const response = await apiFetch(apiPath, options);
 
         if (response.status === 204) {
           if (successMessage) notify(successMessage, "success");
@@ -196,12 +209,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           return true;
         }
 
-        const data = await response.json();
-
         if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
           notify(data.error || "Operation failed", "error");
           return null;
         }
+
+        const data = await response.json();
 
         if (successMessage) notify(successMessage, "success");
         if (onSuccess) onSuccess(data);
@@ -492,7 +506,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const updateAdoptionApplication = async (
     application: AdoptionApplication,
   ) => {
-    await handleRequest(
+    return await handleRequest(
       `/api/adoptions/applications/${application.id}`,
       {
         method: "PATCH",
@@ -504,7 +518,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setAdoptionApplications((prev) =>
           prev.map((a) => (a.id === saved.id ? saved : a)),
         ),
-    );
+    ) as AdoptionApplication | null;
   };
 
   const deleteAdoptionApplication = async (id: string) => {

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { CaseStatus, User } from '../types';
 import { useAppContext } from '../context/AppContext';
+import { apiFetch } from '../lib/api';
 
 interface DashboardProps {
   user: User;
@@ -59,7 +60,7 @@ const DashboardPage: React.FC<DashboardProps> = ({ user }) => {
   const lowStockCount = useMemo(() => medicines.filter(m => m.quantity <= m.minStockLevel).length, [medicines]);
   
   React.useEffect(() => {
-    fetch('/api/stats')
+    apiFetch('/api/stats')
       .then(res => res.json())
       .then(data => {
         setStats(data);

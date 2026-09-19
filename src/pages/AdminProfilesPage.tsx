@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, Trash2, Edit3, X } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 interface Profile {
   id: string;
@@ -7,6 +8,8 @@ interface Profile {
   email: string;
   phone?: string;
   role: string;
+  isRootAdmin: boolean;
+  isActive: boolean;
 }
 
 interface FormErrors {
@@ -17,15 +20,12 @@ interface FormErrors {
   role?: string;
 }
 
-const API_URL = "/api/users";
+const API_URL = "/api/admin/profiles";
 
-interface AdminProfilesPageProps {
-  userId?: string;
-}
-
-const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
+const AdminProfilesPage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
 
   const [formData, setFormData] = useState({
@@ -40,7 +40,7 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
 
   const fetchProfiles = async () => {
     try {
-      const response = await fetch(`${API_URL}?userId=${userId}`);
+      const response = await apiFetch(API_URL);
 
       if (!response.ok) {
         throw new Error("Failed to fetch profiles");
@@ -62,11 +62,13 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
 
     return profiles.filter(
       (profile) =>
-        profile.fullName.toLowerCase().includes(query) ||
-        profile.email.toLowerCase().includes(query) ||
-        profile.role.toLowerCase().includes(query),
+        (activeFilter === "all" ||
+          (activeFilter === "active" ? profile.isActive !== false : profile.isActive === false)) &&
+        (profile.fullName.toLowerCase().includes(query) ||
+          profile.email.toLowerCase().includes(query) ||
+          profile.role.toLowerCase().includes(query)),
     );
-  }, [profiles, search]);
+  }, [profiles, search, activeFilter]);
 
   const resetForm = () => {
     setFormData({
@@ -139,7 +141,7 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
     if (!validateForm()) return;
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +168,7 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
     if (!validateForm()) return;
 
     try {
-      const response = await fetch(`${API_URL}/${editingProfile.id}`, {
+      const response = await apiFetch(`${API_URL}/${editingProfile.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -189,12 +191,12 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
   };
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = window.confirm("Delete this profile?");
+    const confirmDelete = window.confirm("Deactivate this profile? The account can be reactivated later.");
 
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await apiFetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
 
@@ -205,6 +207,20 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
         return;
       }
 
+      await fetchProfiles();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleReactivate = async (id: string) => {
+    try {
+      const response = await apiFetch(`${API_URL}/${id}/reactivate`, { method: "PATCH" });
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "Failed to reactivate profile");
+        return;
+      }
       await fetchProfiles();
     } catch (error) {
       console.error(error);
@@ -423,7 +439,7 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
       </div>
 
       {/* SEARCH */}
-      <div className="bg-white p-5 rounded-3xl border">
+      <div className="bg-white p-5 rounded-3xl border flex gap-4 items-center">
         <div className="relative">
           <Search
             size={18}
@@ -438,6 +454,16 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
             className="w-full pl-12 p-4 rounded-2xl border"
           />
         </div>
+        <select
+          aria-label="Filter profiles by status"
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value as "all" | "active" | "inactive")}
+          className="p-4 rounded-2xl border border-slate-200 text-sm font-bold"
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="all">All profiles</option>
+        </select>
       </div>
 
       {/* TABLE */}
@@ -462,7 +488,15 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
 
                 <td className="p-5">{profile.phone || "-"}</td>
 
-                <td className="p-5">{profile.role}</td>
+                <td className="p-5">
+                  <div className="flex items-center gap-2">
+                    <span>{profile.role}</span>
+                    {profile.isRootAdmin && <span className="text-[10px] font-black text-amber-700 bg-amber-50 px-2 py-1 rounded-full">ROOT</span>}
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-full ${profile.isActive !== false ? "text-emerald-700 bg-emerald-50" : "text-slate-600 bg-slate-100"}`}>
+                      {profile.isActive !== false ? "ACTIVE" : "INACTIVE"}
+                    </span>
+                  </div>
+                </td>
 
                 <td className="p-5">
                   <div className="flex justify-end gap-3">
@@ -474,10 +508,12 @@ const AdminProfilesPage: React.FC<AdminProfilesPageProps> = ({ userId }) => {
                     </button>
 
                     <button
-                      onClick={() => handleDelete(profile.id)}
-                      className="p-3 bg-red-50 text-red-600 rounded-xl"
+                      onClick={() => profile.isActive !== false ? handleDelete(profile.id) : handleReactivate(profile.id)}
+                      disabled={profile.isRootAdmin}
+                      title={profile.isRootAdmin ? "The root admin account cannot be deactivated" : undefined}
+                      className={`p-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed ${profile.isActive !== false ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}
                     >
-                      <Trash2 size={18} />
+                      {profile.isActive !== false ? <Trash2 size={18} /> : <span className="text-xs font-black">Reactivate</span>}
                     </button>
                   </div>
                 </td>

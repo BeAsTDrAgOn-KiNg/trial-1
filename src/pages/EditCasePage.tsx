@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 import { 
   ChevronLeft, 
   Camera, 
@@ -47,7 +48,7 @@ const EditCasePage: React.FC = () => {
     const fetchCase = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/cases/${caseId}`);
+        const res = await apiFetch(`/api/cases/${caseId}`);
         const foundCase = await res.json();
         
         if (foundCase && !foundCase.error) {

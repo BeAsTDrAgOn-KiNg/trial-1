@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useNotification } from "../context/NotificationContext";
+import { saveAuthToken } from "../lib/api";
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -54,6 +55,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       const data = await res.json();
 
       if (res.ok) {
+        if (!data.token) {
+          throw new Error("Login response did not include an authentication token");
+        }
         notify("Welcome back!", "success");
 
         const userToLogin: User = {
@@ -65,6 +69,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         };
 
         localStorage.setItem("pfa_user_session", JSON.stringify(userToLogin));
+        saveAuthToken(data.token);
 
         onLogin(userToLogin);
       } else {

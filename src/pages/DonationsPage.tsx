@@ -120,11 +120,16 @@ const DonationsPage: React.FC = () => {
 
   const handleNewDonationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const amount = Number(newEntry.amount);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 10_000_000) {
+      alert("Donation amount must be between ₹1 and ₹1,00,00,000.");
+      return;
+    }
     
     const entry: Donation = {
       id: `D${Math.floor(Math.random() * 1000) + 200}`,
       donorName: newEntry.donorName,
-      amount: parseFloat(newEntry.amount) || 0,
+      amount,
       message: newEntry.message,
       paymentId: newEntry.paymentId,
       date: newEntry.date,
@@ -308,6 +313,9 @@ const DonationsPage: React.FC = () => {
                   <input 
                     required 
                     type="number"
+                    min="1"
+                    max="10000000"
+                    step="0.01"
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-[#005F54]/10 focus:outline-none transition-all shadow-sm" 
                     value={newEntry.amount} 
                     onChange={e => setNewEntry({...newEntry, amount: e.target.value})} 
@@ -455,7 +463,11 @@ const DonationsPage: React.FC = () => {
                       <td className="px-8 py-6 text-xs font-bold text-slate-500">{row.date || new Date(row.createdAt || '').toLocaleDateString('en-GB')}</td>
                       <td className="px-8 py-6 text-right no-print">
                         <div className="flex justify-end gap-2">
-                          <button className="p-2.5 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-xl transition-all">
+                          <button
+                            onClick={() => alert(`Donation #${row.id}\nDonor: ${row.donorName}\nAmount: ₹${row.amount.toLocaleString('en-IN')}\nPayment reference: ${row.paymentId || 'N/A'}\nNotes: ${row.message || 'None'}`)}
+                            aria-label={`View details for donation ${row.id}`}
+                            className="p-2.5 text-slate-300 hover:text-[#005F54] hover:bg-emerald-50 rounded-xl transition-all"
+                          >
                             <Info size={20} />
                           </button>
                           <button 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../db';
-import { sendError, sanitizeData } from '../utils';
+import { sendError } from '../utils';
 
 const router = Router();
 
@@ -17,9 +17,45 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const newCase = await prisma.wildlifeCase.create({ data: sanitizeData(req.body) });
+    const requiredFields = [
+      'caseNumber', 'dateTime', 'animal', 'species', 'schedule', 'location',
+      'status', 'complainantName', 'complainantPhone',
+    ] as const;
+    const missingFields = requiredFields.filter((field) => !String(req.body[field] ?? '').trim());
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+      });
+    }
+
+    const data = {
+      caseNumber: String(req.body.caseNumber).trim(),
+      dateTime: String(req.body.dateTime).trim(),
+      animal: String(req.body.animal).trim(),
+      species: String(req.body.species).trim(),
+      schedule: String(req.body.schedule).trim(),
+      location: String(req.body.location).trim(),
+      status: String(req.body.status).trim(),
+      complainantName: String(req.body.complainantName).trim(),
+      complainantPhone: String(req.body.complainantPhone).trim(),
+      forestDeptContact: req.body.forestDeptContact || null,
+      releasePlan: req.body.releasePlan || null,
+      isReadyForRelease: Boolean(req.body.isReadyForRelease),
+      sentFor: req.body.sentFor || null,
+      destination: req.body.destination || null,
+      correspondence: req.body.correspondence || null,
+      signature: req.body.signature || null,
+      reportedDate: req.body.reportedDate || null,
+      resolvedDate: req.body.resolvedDate || null,
+      imageUrl: req.body.imageUrl || null,
+    };
+    const newCase = await prisma.wildlifeCase.create({ data });
     res.status(201).json(newCase);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ error: 'Case number already exists' });
+    }
     sendError(res, error, 'Failed to create wildlife case');
   }
 });

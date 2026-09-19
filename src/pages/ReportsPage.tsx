@@ -5,6 +5,7 @@ import { IndianRupee, Heart, Activity, Pill, Users, Scissors, LayoutGrid, Shield
 import { useAppContext } from '../context/AppContext';
 import { CaseStatus } from '../types';
 import { User } from '../types';
+import { apiFetch } from '../lib/api';
 
 interface ReportsPageProps {
   user: User | null;
@@ -18,7 +19,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
 
   React.useEffect(() => {
     setIsFetchingCases(true);
-    fetch('/api/cases/export')
+    apiFetch('/api/cases/export')
       .then(res => res.json())
       .then(data => {
         setReportCases(data);

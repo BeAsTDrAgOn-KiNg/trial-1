@@ -3,9 +3,6 @@ import { prisma } from '../db';
 import { sendError, sanitizeData } from '../utils';
 
 const router = Router();
-const isAdmin = (req: any) => {
-  return req.headers.role === 'ADMIN';
-};
 // --- Cases with Pagination & Filtering ---
 router.get('/', async (req, res) => {
   try {
