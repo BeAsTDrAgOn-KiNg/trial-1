@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
     const status = String(req.query.status || 'All').trim();
     const year = String(req.query.year || 'All').trim();
     const month = String(req.query.month || 'All').trim();
+    const timeRange = String(req.query.timeRange || 'All').trim();
 
     const where: any = {};
 
@@ -40,6 +41,35 @@ router.get('/', async (req, res) => {
         gte: startDate,
         lte: endDate
       };
+    }
+
+    if (timeRange !== 'All') {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let start: Date | undefined;
+      let end: Date | undefined;
+
+      if (timeRange === 'Today') {
+        start = startOfToday;
+        end = new Date(startOfToday);
+        end.setDate(end.getDate() + 1);
+      } else if (timeRange === 'Yesterday') {
+        end = startOfToday;
+        start = new Date(startOfToday);
+        start.setDate(start.getDate() - 1);
+      } else if (timeRange === 'This Week') {
+        start = new Date(startOfToday);
+        start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        end = new Date(start);
+        end.setDate(end.getDate() + 7);
+      } else if (timeRange === 'Last Week') {
+        end = new Date(startOfToday);
+        end.setDate(end.getDate() - ((end.getDay() + 6) % 7));
+        start = new Date(end);
+        start.setDate(start.getDate() - 7);
+      }
+
+      if (start && end) where.createdAt = { gte: start, lt: end };
     }
 
     const [data, total] = await Promise.all([

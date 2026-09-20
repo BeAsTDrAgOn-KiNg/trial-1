@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   HashRouter as Router,
   Routes,
@@ -64,6 +65,10 @@ interface SidebarLinkProps {
   collapsed: boolean;
 }
 
+const RequireRole: React.FC<{ user: User; allowedRoles: User['role'][]; children: React.ReactElement }> = ({ user, allowedRoles, children }) => {
+  return allowedRoles.includes(user.role) ? children : <Navigate to="/" replace />;
+};
+
 const SidebarLink: React.FC<SidebarLinkProps> = ({
   to,
   icon: Icon,
@@ -99,25 +104,46 @@ const AppHeader: React.FC<{
   const { lowStockMedicines } = useAppContext();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ fullName: user.fullName, phone: user.phone || "", password: "" });
+  const [profileForm, setProfileForm] = useState({ fullName: user.fullName, phone: user.phone || "", currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const openProfile = () => {
-    setProfileForm({ fullName: user.fullName, phone: user.phone || "", password: "" });
+    setProfileForm({ fullName: user.fullName, phone: user.phone || "", currentPassword: "", newPassword: "", confirmPassword: "" });
+    setIsChangingPassword(false);
     setProfileError("");
     setIsProfileOpen(true);
   };
 
   const saveProfile = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (isChangingPassword) {
+      if (!profileForm.currentPassword) {
+        setProfileError('Enter your current password to make a password change.');
+        return;
+      }
+      if (profileForm.newPassword.length < 8) {
+        setProfileError('Your new password must be at least 8 characters.');
+        return;
+      }
+      if (profileForm.newPassword !== profileForm.confirmPassword) {
+        setProfileError('The new password and confirmation do not match.');
+        return;
+      }
+    }
     setIsSavingProfile(true);
     setProfileError("");
     try {
+      const payload = {
+        fullName: profileForm.fullName,
+        phone: profileForm.phone,
+        ...(isChangingPassword ? { currentPassword: profileForm.currentPassword, password: profileForm.newPassword } : {}),
+      };
       const response = await apiFetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileForm),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
@@ -264,20 +290,20 @@ const AppHeader: React.FC<{
           </button>
         </div>
       </div>
-      {isProfileOpen && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={saveProfile} className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5">
+      {isProfileOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" role="presentation" onMouseDown={() => setIsProfileOpen(false)}>
+          <form onSubmit={saveProfile} onMouseDown={(event) => event.stopPropagation()} className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-5" role="dialog" aria-modal="true" aria-labelledby="profile-title">
             <div className="flex items-start justify-between gap-4">
-              <div><h2 className="text-xl font-black text-slate-800">My Profile</h2><p className="text-xs text-slate-500 mt-1">Your role cannot be changed here.</p></div>
+              <div><h2 id="profile-title" className="text-xl font-black text-slate-800">My Profile</h2><p className="text-xs text-slate-500 mt-1">Your role cannot be changed here.</p></div>
               <button type="button" onClick={() => setIsProfileOpen(false)} className="p-2 text-slate-400 hover:text-slate-700"><X size={20} /></button>
             </div>
             {profileError && <p className="text-sm text-rose-600 bg-rose-50 p-3 rounded-xl">{profileError}</p>}
             <label className="block text-sm font-bold text-slate-700">Full name<input required value={profileForm.fullName} onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label>
             <label className="block text-sm font-bold text-slate-700">Phone<input value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value.replace(/\D/g, '') })} className="mt-1 w-full p-3 border rounded-xl" inputMode="numeric" maxLength={10} /></label>
-            <label className="block text-sm font-bold text-slate-700">New password <span className="font-normal text-slate-400">optional</span><input type="password" value={profileForm.password} onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label>
+            {!isChangingPassword ? <button type="button" onClick={() => { setIsChangingPassword(true); setProfileError(""); }} className="w-full py-3 rounded-xl border border-[#005F54] text-[#005F54] font-bold hover:bg-emerald-50">Change password</button> : <div className="space-y-4 rounded-2xl bg-slate-50 p-4 border border-slate-100"><div className="flex items-center justify-between"><p className="text-sm font-bold text-slate-700">Change password</p><button type="button" onClick={() => { setIsChangingPassword(false); setProfileForm({ ...profileForm, currentPassword: "", newPassword: "", confirmPassword: "" }); }} className="text-xs font-bold text-slate-500 hover:text-[#005F54]">Cancel</button></div><label className="block text-sm font-bold text-slate-700">Current password<input required type="password" autoComplete="current-password" value={profileForm.currentPassword} onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label><label className="block text-sm font-bold text-slate-700">New password<input required type="password" autoComplete="new-password" value={profileForm.newPassword} onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label><label className="block text-sm font-bold text-slate-700">Confirm new password<input required type="password" autoComplete="new-password" value={profileForm.confirmPassword} onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} className="mt-1 w-full p-3 border rounded-xl" /></label></div>}
             <button disabled={isSavingProfile} className="w-full py-3 rounded-xl bg-[#005F54] text-white font-bold disabled:opacity-50">{isSavingProfile ? 'Saving...' : 'Save changes'}</button>
           </form>
-        </div>
+        </div>, document.body
       )}
     </header>
   );
@@ -362,7 +388,7 @@ const App: React.FC = () => {
       roles: ["Admin", "Doctor", "Data Entry"],
     },
     { to: "/donations", icon: HandHeart, label: "Donations", roles: ["Admin"] },
-    { to: "/adoptions", icon: PawPrint, label: "Adoptions", roles: ["Admin"] },
+    { to: "/adoptions", icon: PawPrint, label: "Adoptions", roles: ["Admin", "Doctor"] },
     {
       to: "/analytics",
       icon: BarChart3,
@@ -392,7 +418,11 @@ const App: React.FC = () => {
           {!user ? (
             <Routes>
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="*" element={<LoginPage onLogin={setUser} />} />
+              <Route path="*" element={<LoginPage onLogin={(loggedInUser) => {
+                // A new session must not inherit the previous account's hash route.
+                window.location.hash = "#/";
+                setUser(loggedInUser);
+              }} />} />
             </Routes>
           ) : (
             <div className="flex h-screen overflow-hidden bg-[#F1F5F9]">
@@ -458,54 +488,54 @@ const App: React.FC = () => {
                   <Routes>
                     <Route path="/" element={<DashboardPage user={user} />} />
                     <Route path="/search" element={<SearchResultsPage />} />
-                    <Route path="/cases" element={<CasesPage user={user} />} />
-                    <Route path="/wildlife" element={<WildlifePage />} />
+                    <Route path="/cases" element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><CasesPage user={user} /></RequireRole>} />
+                    <Route path="/wildlife" element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor', 'Data Entry']}><WildlifePage /></RequireRole>} />
                     <Route
                       path="/housekeeping"
-                      element={<HousekeepingPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Data Entry']}><HousekeepingPage /></RequireRole>}
                     />
                     <Route
                       path="/declaration"
-                      element={<AnimalDeclarationPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Data Entry']}><AnimalDeclarationPage /></RequireRole>}
                     />
-                    <Route path="/cases/new" element={<NewCasePage />} />
+                    <Route path="/cases/new" element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><NewCasePage /></RequireRole>} />
                     <Route
                       path="/cases/:caseId/edit"
-                      element={<EditCasePage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><EditCasePage /></RequireRole>}
                     />
                     <Route
                       path="/cases/:caseId/clinical/new"
-                      element={<NewClinicalEntryPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><NewClinicalEntryPage /></RequireRole>}
                     />
                     <Route
                       path="/cases/:caseId/clinical/:logId/edit"
-                      element={<NewClinicalEntryPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><NewClinicalEntryPage /></RequireRole>}
                     />
-                    <Route path="/abc" element={<ABCPage />} />
+                    <Route path="/abc" element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor', 'Data Entry']}><ABCPage /></RequireRole>} />
                     <Route
                       path="/inventory"
-                      element={<InventoryPage user={user} />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor', 'Data Entry']}><InventoryPage user={user} /></RequireRole>}
                     />
                     <Route
                       path="/inventory/new"
-                      element={<NewMedicinePage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><NewMedicinePage /></RequireRole>}
                     />
-                    <Route path="/donations" element={<DonationsPage />} />
-                    <Route path="/adoptions" element={<AdoptionsPage />} />
-                    <Route path="/staff" element={<StaffPage />} />
+                    <Route path="/donations" element={<RequireRole user={user} allowedRoles={['Admin']}><DonationsPage /></RequireRole>} />
+                    <Route path="/adoptions" element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><AdoptionsPage /></RequireRole>} />
+                    <Route path="/staff" element={<RequireRole user={user} allowedRoles={['Admin']}><StaffPage /></RequireRole>} />
                     <Route
                       path="/analytics"
-                      element={<ReportsPage user={user} />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><ReportsPage user={user} /></RequireRole>}
                     />
                     <Route
                       path="/reports/census"
-                      element={<CensusReportPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin', 'Doctor']}><CensusReportPage /></RequireRole>}
                     />
-                    <Route path="/history-logs" element={<HistoryPage />} />
+                    <Route path="/history-logs" element={<RequireRole user={user} allowedRoles={['Admin']}><HistoryPage /></RequireRole>} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                     <Route
                       path="/admin"
-                      element={<AdminProfilesPage />}
+                      element={<RequireRole user={user} allowedRoles={['Admin']}><AdminProfilesPage /></RequireRole>}
                     />
                   </Routes>
                 </div>

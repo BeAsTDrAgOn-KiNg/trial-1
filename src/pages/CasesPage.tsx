@@ -336,6 +336,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
   const PAGE_SIZE = 10;
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   
   // -- ADVANCED FILTERS --
   const [filterStatus, setFilterStatus] = useState('All');
@@ -345,6 +346,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
 
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
   
   const currentCaseLogs = useMemo(() => {
     if (!selectedCase) return [];
@@ -357,10 +359,11 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: PAGE_SIZE.toString(),
-        search: searchTerm,
+        search: debouncedSearchTerm,
         status: filterStatus,
         year: filterYear,
         month: filterMonth,
+        timeRange: filterTimeRange,
       });
 
       const res = await apiFetch(`/api/cases?${params.toString()}`);
@@ -379,7 +382,12 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
 
   useEffect(() => {
     fetchCases();
-  }, [currentPage, searchTerm, filterStatus, filterYear, filterMonth]);
+  }, [currentPage, debouncedSearchTerm, filterStatus, filterYear, filterMonth, filterTimeRange]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 400);
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     const state = location.state as { openCaseId?: string } | null;
@@ -770,7 +778,7 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                  <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 flex gap-6">
                     <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0">
-                       <SanctuaryImage src={selectedCase.imageUrl} alt="Animal" className="w-full h-full object-cover" />
+                       <SanctuaryImage src={selectedCase.imageUrl} alt="Animal" className="w-full h-full object-cover" onClick={() => selectedCase.imageUrl && setExpandedImage({ src: selectedCase.imageUrl, alt: selectedCase.title })} />
                     </div>
                     <div className="space-y-3 flex-1">
                        <div>
@@ -875,6 +883,13 @@ const CasesPage: React.FC<CasesPageProps> = ({ user }) => {
 
       {selectedCase && isPreviewing && (
         <CaseSheetPreview caseItem={selectedCase} clinicalEntries={currentCaseLogs} onClose={() => setIsPreviewing(false)} />
+      )}
+
+      {expandedImage && (
+        <div className="fixed inset-0 z-[120] bg-slate-950/90 p-4 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Full-size case image" onClick={() => setExpandedImage(null)}>
+          <button aria-label="Close image" onClick={() => setExpandedImage(null)} className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20"><X size={24} /></button>
+          <img src={expandedImage.src} alt={expandedImage.alt} onClick={(event) => event.stopPropagation()} className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl" />
+        </div>
       )}
     </div>
   );

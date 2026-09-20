@@ -5,8 +5,9 @@ import { Response } from 'express';
  */
 export const sendError = (res: Response, error: any, defaultMessage: string) => {
   console.error(`[API Error] ${defaultMessage}:`, error);
-  const message = error instanceof Error ? error.message : defaultMessage;
-  res.status(500).json({ error: message, success: false });
+  // Prisma errors can expose database structure and local filesystem paths.
+  // Keep their detail in server logs, but never return it to a browser.
+  res.status(500).json({ error: defaultMessage, success: false });
 };
 
 /**

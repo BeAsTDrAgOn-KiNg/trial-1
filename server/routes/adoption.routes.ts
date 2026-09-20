@@ -50,6 +50,30 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Keep the aggregate small and server-side so reports do not need to download
+// every adoption record just to show headline totals.
+router.get('/stats', async (_req, res) => {
+  try {
+    const adoptions = await prisma.adoption.findMany({
+      include: { animal: { select: { species: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const byMonth: Record<string, number> = {};
+    const byAnimalType: Record<string, number> = {};
+    for (const adoption of adoptions) {
+      const month = adoption.createdAt.toISOString().slice(0, 7);
+      byMonth[month] = (byMonth[month] || 0) + 1;
+      const animalType = adoption.animal.species || 'Unknown';
+      byAnimalType[animalType] = (byAnimalType[animalType] || 0) + 1;
+    }
+
+    res.json({ total: adoptions.length, byMonth, byAnimalType });
+  } catch (error) {
+    sendError(res, error, 'Failed to fetch adoption statistics');
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const adoption = await prisma.adoption.create({ data: sanitizeData(req.body) });

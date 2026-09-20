@@ -9,12 +9,24 @@ const router = Router();
 
 router.patch('/me', async (req, res) => {
   try {
-    const { fullName, phone, password } = req.body;
+    const { fullName, phone, password, currentPassword } = req.body;
     const data: { fullName?: string; phone?: string | null; password?: string } = {};
 
     if (fullName !== undefined) data.fullName = fullName;
     if (phone !== undefined) data.phone = phone || null;
-    if (password) data.password = await bcrypt.hash(password, 12);
+    if (password) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Your current password is required to set a new password' });
+      }
+      const account = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { password: true },
+      });
+      if (!account || !await bcrypt.compare(currentPassword, account.password)) {
+        return res.status(400).json({ error: 'The current password is incorrect' });
+      }
+      data.password = await bcrypt.hash(password, 12);
+    }
 
     if (Object.keys(data).length === 0) {
       return res.status(400).json({ error: 'Provide a name, phone number, or password to update' });

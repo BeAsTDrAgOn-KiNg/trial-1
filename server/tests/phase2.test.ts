@@ -16,6 +16,14 @@ describe('Phase 2 missing endpoints', () => {
     expect(adoption.status).toBe(200);
   });
 
+  it('allows Doctors to access adoptions but keeps donations Admin-only', async () => {
+    prismaMock.adoption.findMany.mockResolvedValue([] as any);
+    const doctor = await request(app)
+      .get('/api/adoptions')
+      .set({ Authorization: `Bearer ${issueAuthToken('doctor-1', 'Doctor')}` });
+    expect(doctor.status).toBe(200);
+  });
+
   it('validates and deletes donation transactions', async () => {
     const invalid = await request(app).post('/api/donations').set(authorization()).send({ donorName: 'Asha', amount: '99999999999' });
     expect(invalid.status).toBe(400);
@@ -35,5 +43,16 @@ describe('Phase 2 missing endpoints', () => {
       where: { id: 'admin-1' },
       data: { fullName: 'New Name', phone: '1234567890' },
     }));
+  });
+
+  it('requires the current password before changing a password', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ password: await (await import('bcryptjs')).default.hash('correct-password', 10) } as any);
+    const rejected = await request(app).patch('/api/users/me').set(authorization()).send({ password: 'new-password' });
+    expect(rejected.status).toBe(400);
+    expect(rejected.body.error).toContain('current password');
+
+    const incorrect = await request(app).patch('/api/users/me').set(authorization()).send({ password: 'new-password', currentPassword: 'wrong-password' });
+    expect(incorrect.status).toBe(400);
+    expect(incorrect.body.error).toContain('incorrect');
   });
 });
