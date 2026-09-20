@@ -190,7 +190,7 @@ const ABCPage: React.FC = () => {
                   <Filter size={14} className="text-[#005F54]" />
                 </div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Found <span className="text-[#005F54] font-black">{filteredRecords.length}</span> matching surgery records
+                  {searchTerm.trim() ? <>Found <span className="text-[#005F54] font-black">{filteredRecords.length}</span> matching surgery records</> : <>Total <span className="text-[#005F54] font-black">{abcRecords.length}</span> surgery records</>}
                 </p>
               </div>
               {searchTerm && (

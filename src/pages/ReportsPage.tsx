@@ -16,6 +16,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
   const { medicines, staff, abcRecords, donations, adoptions, isLoading } = useAppContext();
   const [reportCases, setReportCases] = React.useState<any[]>([]);
   const [isFetchingCases, setIsFetchingCases] = React.useState(false);
+  const [adoptionStats, setAdoptionStats] = React.useState<{ total: number; byMonth: Record<string, number>; byAnimalType: Record<string, number> }>({ total: 0, byMonth: {}, byAnimalType: {} });
 
   React.useEffect(() => {
     setIsFetchingCases(true);
@@ -26,6 +27,13 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
         setIsFetchingCases(false);
       })
       .catch(() => setIsFetchingCases(false));
+  }, []);
+
+  React.useEffect(() => {
+    apiFetch('/api/adoptions/stats')
+      .then(async (res) => res.ok ? res.json() : Promise.reject(new Error('Unable to load adoption statistics')))
+      .then(setAdoptionStats)
+      .catch(() => undefined);
   }, []);
 
   const generateCSV = (data: any[], filename: string) => {
@@ -76,7 +84,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
       desc: 'List of all staff and volunteers.',
       icon: Users, 
       color: 'bg-emerald-50 text-emerald-600',
-      roles: ['Admin'],
+      roles: ['Admin', 'Doctor'],
       action: () => generateCSV(staff, 'pfa_staff_volunteer_list')
     },
     { 
@@ -174,6 +182,15 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user }) => {
                 <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
              </div>
            ))}
+        </div>
+      </section>
+
+      <section className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 md:p-10">
+        <div className="flex items-center gap-3 mb-6"><div className="p-3 bg-rose-50 text-rose-600 rounded-2xl"><Heart size={22} /></div><div><h3 className="font-black text-slate-800">Adoption overview</h3><p className="text-xs text-slate-500">Current adoption totals and breakdowns.</p></div></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="rounded-2xl bg-rose-50 p-5"><p className="text-xs font-bold text-rose-700">Total adoptions</p><p className="text-3xl font-black text-rose-900 mt-1">{adoptionStats.total}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-5"><p className="text-xs font-bold text-slate-500 mb-2">By animal type</p>{Object.keys(adoptionStats.byAnimalType).length ? Object.entries(adoptionStats.byAnimalType).map(([type, count]) => <p key={type} className="text-sm font-bold text-slate-700">{type}: {count}</p>) : <p className="text-sm text-slate-400">No adoptions recorded.</p>}</div>
+          <div className="rounded-2xl bg-slate-50 p-5"><p className="text-xs font-bold text-slate-500 mb-2">By month</p>{Object.keys(adoptionStats.byMonth).length ? Object.entries(adoptionStats.byMonth).slice(-4).map(([month, count]) => <p key={month} className="text-sm font-bold text-slate-700">{month}: {count}</p>) : <p className="text-sm text-slate-400">No adoptions recorded.</p>}</div>
         </div>
       </section>
 

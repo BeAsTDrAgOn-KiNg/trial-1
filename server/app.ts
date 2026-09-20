@@ -68,7 +68,7 @@ app.use('/api/staff', requireRole(['Admin']), staffRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api', medicalRoutes);
 app.use('/api/donations', requireRole(['Admin']), donationRoutes);
-app.use('/api/adoptions', requireRole(['Admin']), adoptionRoutes);
+app.use('/api/adoptions', requireRole(['Admin', 'Doctor']), adoptionRoutes);
 app.use('/api/declarations', requireRole(['Admin', 'Data Entry']), declarationRoutes);
 app.use('/api/abc-records', requireRole(['Admin', 'Doctor', 'Data Entry']), abcRecordRoutes);
 app.use('/api/users', userRoutes);

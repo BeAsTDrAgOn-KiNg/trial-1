@@ -24,6 +24,7 @@ const API_URL = "/api/admin/profiles";
 
 const AdminProfilesPage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("active");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
@@ -43,13 +44,16 @@ const AdminProfilesPage: React.FC = () => {
       const response = await apiFetch(API_URL);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch profiles");
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to fetch profiles");
       }
 
       const data = await response.json();
       setProfiles(data);
+      setLoadError("");
     } catch (error) {
       console.error(error);
+      setLoadError(error instanceof Error ? error.message : "Failed to fetch profiles");
     }
   };
 
@@ -264,6 +268,7 @@ const AdminProfilesPage: React.FC = () => {
       </div>
 
       {/* FORM */}
+      {loadError && <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl font-medium">Unable to load profiles: {loadError}</div>}
       <div className="bg-white p-8 rounded-3xl border">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black">
